@@ -6,14 +6,25 @@ class FMPlayer extends React.Component {
   constructor() {
     super()
     this.state = {
-      fArr: [261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88, 523.25],
-      fIdx: 0, // Baseband Frequency
+      f: 200, // Baseband Frequency
       fC: 1000, // Carrier Frequency
-      fDev: 75, // FM Deviation
-      bufferSize: 8192, // FFT
-      sampleRate: 44100,
+      fDev: 150, // FM Deviation
+      bufferSize: 65536, // FFT
+      sampleRate: 65536,
       numPoints: 1000,
+      audioContext: null,
+      audioSource: null,
     }
+  }
+
+  componentDidMount() {
+    this.setState({
+      audioContext: new AudioContext()
+    })
+  }
+
+  componentDidUpdate() {
+    this.playAudio()
   }
 
   getTimeDomainData() {
@@ -22,7 +33,7 @@ class FMPlayer extends React.Component {
     let _yC = new Float64Array(this.state.sampleRate).fill(0)
     let _y = new Float64Array(this.state.sampleRate).fill(0)
 
-    let f = this.state.fArr[this.state.fIdx]
+    let f = this.state.f
     let fC = this.state.fC
     let fDev = this.state.fDev
 
@@ -35,6 +46,7 @@ class FMPlayer extends React.Component {
       _yC[i] = Math.sin(2 * Math.PI * fC * _x[i])
     }
 
+    // return np.cos( 2*np.pi * f_c * ts + (f_dev / f_m) * np.sin( 2*np.pi * f_m * ts ) ).astype(np.float32)
     // y(t) = cos( 2*pi * f_c * t + ( f_dev / f_m ) * sin( 2*pi * f_m * t ) )
     for (let i = 0; i < this.state.sampleRate; ++i) {
       _y[i] = Math.cos(2 * Math.PI * fC * _x[i] + (fDev / f) * Math.sin(2 * Math.PI * f * _x[i]))
@@ -52,13 +64,13 @@ class FMPlayer extends React.Component {
     if (event.target.id === "incf") {
       this.setState((prevState) => {
         return {
-          fIdx: prevState.fIdx >= prevState.fArr.length - 1 ? prevState.fIdx : prevState.fIdx + 1
+          f: prevState.f >= 1000 ? prevState.f : prevState.f + 50
         }
       })
     } else if (event.target.id === "decf") {
       this.setState((prevState) => {
         return {
-          fIdx: prevState.fIdx <= 0 ? prevState.fIdx : prevState.fIdx - 1
+          f: prevState.f <= 50 ? prevState.f : prevState.f - 50
         }
       })
     } else if (event.target.id === "incfc") {
@@ -70,13 +82,13 @@ class FMPlayer extends React.Component {
     } else if (event.target.id === "decfc") {
       this.setState((prevState) => {
         return {
-          fC: prevState.fC <= 400 ? prevState.fC : prevState.fC - 100
+          fC: prevState.fC <= 200 ? prevState.fC : prevState.fC - 100
         }
       })
     } else if (event.target.id === "incfdev") {
       this.setState((prevState) => {
         return {
-          fDev: prevState.fDev >= 200 ? prevState.fDev : prevState.fDev + 25
+          fDev: prevState.fDev >= 800 ? prevState.fDev : prevState.fDev + 25
         }
       })
     } else if (event.target.id === "decfdev") {
@@ -89,25 +101,26 @@ class FMPlayer extends React.Component {
   }
 
   stopAudio() {
-    // console.log(window.AudioContext)
+    if (this.state.audioSource !== null) {
+      this.state.audioSource.stop()
+    }
   }
 
   startAudio() {
-    var arr = this.getTimeDomainData().y
-    window.AudioContext = window.AudioContext || window.webkitAudioContext;
-    var context = new AudioContext();
-    var buf = new Float32Array(arr.length)
+    let arr = this.getTimeDomainData().y
+    let buf = new Float32Array(arr.length)
     for (var i = 0; i < arr.length; i++) buf[i] = arr[i]
-    var buffer = context.createBuffer(1, buf.length, context.sampleRate)
-    buffer.copyToChannel(buf, 0)
-    var source = context.createBufferSource();
-    source.buffer = buffer;
-    source.connect(context.destination);
-    source.start(0);
+    let audioBuffer = this.state.audioContext.createBuffer(1, buf.length, this.state.sampleRate)
+    audioBuffer.copyToChannel(buf, 0)
+    let audioSource = this.state.audioContext.createBufferSource()
+    audioSource.buffer = audioBuffer
+    audioSource.connect(this.state.audioContext.destination)
+    audioSource.start(0)
+    this.state.audioSource = audioSource
   }
 
   playAudio() {
-    // this.stopAudio();
+    this.stopAudio();
     this.startAudio();
   }
 
@@ -129,7 +142,7 @@ class FMPlayer extends React.Component {
       <div className="app-container">
         <div className="row text-center app-row">
           <div className="col-md text-center">
-            <div className="text-data">Baseband Frequency(Hz)<br/>{this.state.fArr[this.state.fIdx]}</div>
+            <div className="text-data">Baseband Frequency(Hz)<br/>{this.state.f}</div>
             <button id="incf" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>+</button>
             <button id="decf" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>-</button>
           </div>
@@ -182,7 +195,7 @@ class FMPlayer extends React.Component {
                   y: timeData.y.slice(0, this.state.numPoints-1),
                 }
               ]}
-              layout={ {width: 480, height: 320, title: 'FM Wave (Time Domain)', yaxis: {range: [-2, 2]}, margin: 0} }
+              layout={ {width: 480, height: 320, title: 'FM Wave (Time Domain)', yaxis: {range: [-1, 1]}, margin: 0} }
             />
           </div>
           <div className="col-md text-center">

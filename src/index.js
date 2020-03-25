@@ -18,8 +18,9 @@ class App extends React.Component {
         'Multi Frequency Player',
         'AM Player',
         'FM Player',
+        'Microphone'
       ],
-      currApp: 3
+      currApp: 0
     }
   }
 
@@ -38,17 +39,16 @@ class App extends React.Component {
   }
 
   handleClick(event) {
-    console.log("clicked")
-    if (event.target.id === "button-next-app") {
+    if (event.target.id === "button-next-app" || event.target.id === "text-next-app") {
       this.setState((prevState) => {
         let nextApp = (prevState.currApp + 1) % (prevState.appList.length)
         return {
           currApp: nextApp
         }
       });
-    } else if (event.target.id === "button-prev-app") {
+    } else if (event.target.id === "button-prev-app" || event.target.id === "text-prev-app") {
       this.setState((prevState) => {
-        let nextApp = (prevState.currApp > 0) ? (prevState.currApp - 1) : (prevState.currApp + prevState.appList.length - 1)
+        let nextApp = (prevState.currApp > 0) ? (prevState.currApp - 1) : (prevState.appList.length - 1)
         return {
           currApp: nextApp
         }
@@ -63,15 +63,15 @@ class App extends React.Component {
           <div className="row website-header">
             <div className="col-sm text-center">
               <button id="button-prev-app" className="btn btn-dark" onClick={(event) => this.handleClick(event)}>
-                <div className="text-btn">prev</div>
+                <div id="text-prev-app" className="text-btn">prev</div>
               </button>
             </div>
-            <div className="col-lg text-center">
+            <div className="col-sm text-center">
               <div className="app-name">{this.state.appList[this.state.currApp]}</div>
             </div>
             <div className="col-sm text-center">
               <button id="button-next-app" className="btn btn-dark" onClick={(event) => this.handleClick(event)}>
-                <div className="text-btn">next</div>
+                <div id="text-next-app" className="text-btn">next</div>
               </button>
             </div>
           </div>
