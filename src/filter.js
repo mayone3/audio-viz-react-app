@@ -2,7 +2,7 @@
 function IIRFilter(type, x, sampleRate, f, bw) {
   bw = Math.min(bw, f*2)
   var rc, dt, alpha, a0, a1, a2, b0, b1, b2, _a0, ratio
-  var y = new Float64Array(x.length)
+  var y = x.slice()
   rc = 1 / (2 * Math.PI * f)
   dt = 1 / sampleRate
 
@@ -20,7 +20,7 @@ function IIRFilter(type, x, sampleRate, f, bw) {
       a1 = rc1 / (rc1 + dt)
       break;
     case 4:
-      bw = Math.log((f+bw/2)/(f-bw/2))
+      bw = Math.log((f+bw/2)/Math.max(1, f-bw/2))
       var A = Math.pow(10, 20/40)
       var w0 = 2 * Math.PI * f / sampleRate
       var c = Math.cos(w0)

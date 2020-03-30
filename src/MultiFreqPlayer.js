@@ -15,20 +15,33 @@ class MultiFreqPlayer extends React.Component {
       numPoints: 1000,
       noiseAIdx: 1,
       noiseList: ['NONE', 'WHITE', 'PINK'],
-      noiseType: 1,
+      noiseType: 0,
       filterList: ['NONE', 'LOWPASS', 'HIGHPASS', 'BANDPASS', 'BELL'],
       filterType: 0,
       filterCutoff: 600,
       filterBandwidth: 100,
-      audioContext: null,
+      audioContext: new AudioContext(),
       audioSource: null,
+      x: new Float64Array(65536),
+      y: new Float64Array(65536),
+      noise: new Float64Array(65536),
     }
   }
 
   componentDidMount() {
-    this.setState({
-      audioContext: new AudioContext()
-    })
+    var _x = this.state.x.map((v, i) => i/this.state.sampleRate)
+    var _y = new Float64Array(this.state.bufferSize).fill(0)
+    var _noise = new Float64Array(this.state.bufferSize).fill(0)
+    var _a = this.state.a
+    for (let i = 0; i < _y.length; ++i) {
+      for (let freqIndex = 0; freqIndex < this.state.f.length; ++freqIndex) {
+        _y[i] += _a[freqIndex] * Math.sin(2 * Math.PI * this.state.f[freqIndex] * _x[i])
+      }
+    }
+    var r = 0
+    for (let i = 0; i < _a.length; ++i) { r += 1 * (_a[i] !== 0) }
+    for (let i = 0; i < _y.length; ++i) { _y[i] /= r }
+    this.setState({ x: _x, y: _y, noise:_noise })
   }
 
   componentDidUpdate() {
@@ -36,154 +49,107 @@ class MultiFreqPlayer extends React.Component {
   }
 
   getTimeDomainData() {
-    let _x = new Float64Array(this.state.sampleRate).fill(0)
-    let _y = new Float64Array(this.state.sampleRate).fill(0)
+    let _x = this.state.x
+    let _y = this.state.y
+    let _amp = 1 + this.state.aList[this.state.noiseAIdx]*(this.state.noiseType!==0)
+    _y = _y.map((v,i)=>(v+this.state.noise[i])/_amp)
+    _y = filter.IIRFilter(this.state.filterType, _y, this.state.sampleRate, this.state.filterCutoff, this.state.filterBandwidth)
+    return ({ x: _x, y: _y })
+  }
 
-    for (let i = 0; i < this.state.sampleRate; ++i) {
-      _x[i] = i/this.state.sampleRate
-      for (let freqIndex = 0; freqIndex < this.state.f.length; ++freqIndex) {
-        _y[i] += this.state.a[freqIndex] * Math.sin(2 * Math.PI * this.state.f[freqIndex] * _x[i])
-      }
-    }
-
-    // let r = Math.max(Math.abs(Math.max(..._y)), Math.abs(Math.min(..._y)))
-    let r = 0
-    for (let i = 0; i < this.state.a.length; ++i) {
-      if (this.state.a[i] !== 0) {
-        r += 1
-      }
-    }
-
+  updateSignal(event) {
+    var _y = new Float64Array(this.state.bufferSize).fill(0)
+    var _a = this.state.a
+    _a[event.target.id.slice(10)] = event.target.value
     for (let i = 0; i < _y.length; ++i) {
-      _y[i] /= r
-    }
-
-    _y = this.addNoise(_y)
-    _y = this.addFilter(_y)
-
-    return ({
-      x: _x,
-      y: _y
-    })
-  }
-
-  addNoise(signal) {
-    if (this.state.noiseType !== 0) {
-      let noise = new Float64Array(signal.length).fill(0)
-      noise = noise.map(x => (Math.random() - 0.5) * 2 * this.state.aList[this.state.noiseAIdx])
-      if (this.state.noiseType === 2) {
-        let noise1 = filter.IIRFilter(1, noise, this.state.sampleRate, 39, 0)
-        let noise2 = filter.IIRFilter(1, noise, this.state.sampleRate, 399, 0).map(x => 0.7*x)
-        let noise3 = filter.IIRFilter(1, noise, this.state.sampleRate, 3990, 0).map(x => 0.4*x)
-
-        for (let i = 0; i < signal.length; ++i) {
-          noise[i] = noise1[i] + noise2[i] + noise3[i]
-        }
-      }
-
-      for (let i = 0; i < signal.length; ++i) {signal[i] += noise[i]}
-
-      if (this.state.aList[this.state.aIdx] + this.state.aList[this.state.noiseAIdx] > 1.0) {
-        for (let i = 0; i < signal.length; ++i) {
-          signal[i] /= (this.state.aList[this.state.aIdx] + this.state.aList[this.state.noiseAIdx])
-        }
+      for (let freqIndex = 0; freqIndex < this.state.f.length; ++freqIndex) {
+        _y[i] += _a[freqIndex] * Math.sin(2 * Math.PI * this.state.f[freqIndex] * this.state.x[i])
       }
     }
-
-    return signal
+    var r = 0
+    for (let i = 0; i < _a.length; ++i) { r += 1 * (_a[i] !== 0) }
+    for (let i = 0; i < _y.length; ++i) { _y[i] /= r }
+    this.setState({ a: _a, y: _y })
   }
 
-  addFilter(signal) {
-    if (this.state.filterType !== 0) {
-      signal = filter.IIRFilter(this.state.filterType, signal, this.state.sampleRate, this.state.filterCutoff, this.state.filterBandwidth)
+  updateNoise(event) {
+    var _noiseAIdx = this.state.noiseAIdx
+    var _noiseType = this.state.noiseType
+    var _noise = this.state.noise
+
+    if (event.target.id === "inc-noisea") {
+      _noiseAIdx = _noiseAIdx >= this.state.aList.length - 1 ? _noiseAIdx : _noiseAIdx + 1
+    } else if (event.target.id === "dec-noisea") {
+      _noiseAIdx = _noiseAIdx <= 1 ? _noiseAIdx : _noiseAIdx - 1
+    } else if (event.target.id === "next-noise") {
+      _noiseType = (_noiseType + 1) % (this.state.noiseList.length)
+      if (_noiseType === 0) {
+        _noise = _noise.map(x => 0)
+      } else if (_noiseType === 1) {
+        _noise = _noise.map(x => (Math.random() - 0.5) * 2)
+      } else if (_noiseType === 2) {
+        _noise = _noise.map(x => (Math.random() - 0.5) * 2)
+        let _noise1 = filter.IIRFilter(1, _noise, this.state.sampleRate, 39, 0)
+        let _noise2 = filter.IIRFilter(1, _noise, this.state.sampleRate, 399, 0)
+        let _noise3 = filter.IIRFilter(1, _noise, this.state.sampleRate, 3990, 0)
+        _noise = _noise.map((v, i) => _noise1[i]+0.7*_noise2[i]+0.4*_noise3[i])
+        let r = Math.max(..._noise)
+        _noise = _noise.map(x => x/r)
+      }
+    } else if (event.target.id === "prev-noise") {
+      _noiseType = (_noiseType > 0) ? (_noiseType - 1) : (this.state.noiseList.length - 1)
+      if (_noiseType === 0) {
+        _noise = _noise.map(x => 0)
+      } else if (_noiseType === 1) {
+        _noise = _noise.map(x => (Math.random() - 0.5) * 2)
+      } else if (_noiseType === 2) {
+        _noise = _noise.map(x => (Math.random() - 0.5) * 2)
+        let _noise1 = filter.IIRFilter(1, _noise, this.state.sampleRate, 39, 0)
+        let _noise2 = filter.IIRFilter(1, _noise, this.state.sampleRate, 399, 0)
+        let _noise3 = filter.IIRFilter(1, _noise, this.state.sampleRate, 3990, 0)
+        _noise = _noise.map((v, i) => _noise1[i]+0.7*_noise2[i]+0.4*_noise3[i])
+        let r = Math.max(..._noise)
+        _noise = _noise.map(x => x/r)
+      }
     }
-    return signal
+
+    if (_noiseType !== 0) {
+      let r = Math.max(..._noise)
+      _noise = _noise.map(x => x/r*this.state.aList[_noiseAIdx])
+    }
+
+    this.setState({ noiseAIdx: _noiseAIdx, noiseType: _noiseType, noise:_noise })
   }
 
-  handleChange(event) {
-    let id = event.target.id.slice(10)
-    let _a = this.state.a
-    _a[id] = event.target.value
+  updateFilter(event) {
+    var _filterType = this.state.filterType
+    var _filterCutoff = this.state.filterCutoff
+    var _filterBandwidth = this.state.filterBandwidth
 
-    this.setState({
-      a: _a
-    })
+    if (event.target.id === "next-filter") {
+    _filterType = (_filterType + 1) % (this.state.filterList.length)
+    } else if (event.target.id === "prev-filter") {
+    _filterType = (_filterType > 0) ? (_filterType - 1) : (this.state.filterList.length - 1)
+    } else if (event.target.id === "inc-cutoff") {
+      if (_filterCutoff === 1) { _filterCutoff = 50 } else { _filterCutoff = _filterCutoff >= 2000 ? _filterCutoff : _filterCutoff + 50 }
+    } else if (event.target.id === "dec-cutoff") {
+      _filterCutoff = _filterCutoff <= 100 ? 100 : _filterCutoff - 50
+    } else if (event.target.id === "inc-bw") {
+      if (_filterBandwidth === 1) { _filterBandwidth = 50 } else { _filterBandwidth = _filterBandwidth >= 1000 ? _filterBandwidth : _filterBandwidth + 50 }
+    } else if (event.target.id === "dec-bw") {
+      _filterBandwidth = _filterBandwidth <= 50 ? 50 : _filterBandwidth - 50
+    }
+
+    this.setState({ filterType: _filterType, filterCutoff: _filterCutoff, filterBandwidth: _filterBandwidth})
   }
 
   handleClick(event) {
-    if (event.target.id === "inc-noisea") {
-      this.setState((prevState) => {
-        return {
-          noiseAIdx: prevState.noiseAIdx >= prevState.aList.length - 1 ? prevState.noiseAIdx : prevState.noiseAIdx + 1
-        }
-      })
-    } else if (event.target.id === "dec-noisea") {
-      this.setState((prevState) => {
-        return {
-          noiseAIdx: prevState.noiseAIdx <= 0 ? prevState.noiseAIdx : prevState.noiseAIdx - 1
-        }
-      })
-    } else if (event.target.id === "next-noise") {
-      this.setState((prevState) => {
-        return {
-          noiseType: (prevState.noiseType + 1) % (prevState.noiseList.length)
-        }
-      })
-    } else if (event.target.id === "prev-noise") {
-      this.setState((prevState) => {
-        return {
-          noiseType: (prevState.noiseType > 0) ? (prevState.noiseType - 1) : (prevState.noiseList.length - 1)
-        }
-      })
-    } else if (event.target.id === "next-filter") {
-      this.setState((prevState) => {
-        return {
-          filterType: (prevState.filterType + 1) % (prevState.filterList.length)
-        }
-      })
-    } else if (event.target.id === "prev-filter") {
-      this.setState((prevState) => {
-        return {
-          filterType: (prevState.filterType > 0) ? (prevState.filterType - 1) : (prevState.filterList.length - 1)
-        }
-      })
-    } else if (event.target.id === "inc-cutoff") {
-      this.setState((prevState) => {
-        let nextCutoff
-        if (prevState.filterCutoff == 1) {
-          nextCutoff = 50
-        } else {
-          nextCutoff = prevState.filterCutoff >= 2000 ? prevState.filterCutoff : prevState.filterCutoff + 50
-        }
-        return {
-          filterCutoff: nextCutoff
-        }
-      })
-    } else if (event.target.id === "dec-cutoff") {
-      this.setState((prevState) => {
-        return {
-          filterCutoff: prevState.filterCutoff <= 100 ? 100 : prevState.filterCutoff - 50
-        }
-      })
-    } else if (event.target.id === "inc-bw") {
-      this.setState((prevState) => {
-        let nextCutoff
-        if (prevState.filterBandwidth == 1) {
-          nextCutoff = 50
-        } else {
-          nextCutoff = prevState.filterBandwidth >= 1000 ? prevState.filterBandwidth : prevState.filterBandwidth + 50
-        }
-        return {
-          filterBandwidth: nextCutoff
-        }
-      })
-    } else if (event.target.id === "dec-bw") {
-      this.setState((prevState) => {
-        return {
-          filterBandwidth: prevState.filterBandwidth <= 50 ? 50 : prevState.filterBandwidth - 50
-        }
-      })
-    }
+    this.updateNoise(event)
+    this.updateFilter(event)
+  }
+
+  handleChange(event) {
+    this.updateSignal(event)
   }
 
   stopAudio() {

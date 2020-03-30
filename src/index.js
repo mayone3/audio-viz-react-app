@@ -5,6 +5,7 @@ import DSP from "./dsp"
 import AMPlayer from "./AMPlayer"
 import FMPlayer from "./FMPlayer"
 import FixedFreqPlayer from "./FixedFreqPlayer"
+import FixedFreqPlayer2 from "./FixedFreqPlayer2"
 import MultiFreqPlayer from "./MultiFreqPlayer"
 
 import './App.css'
@@ -20,13 +21,13 @@ class App extends React.Component {
         'FM Player',
         'Microphone'
       ],
-      currApp: 0
+      currApp: 1
     }
   }
 
   getCurrApp() {
     if (this.state.appList[this.state.currApp] === 'Fixed Frequency Player') {
-      return <FixedFreqPlayer />
+      return <FixedFreqPlayer2 />
     } else if (this.state.appList[this.state.currApp] === 'Multi Frequency Player') {
       return <MultiFreqPlayer />
     } else if (this.state.appList[this.state.currApp] === 'AM Player') {
