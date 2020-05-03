@@ -36,7 +36,7 @@ class FixedFreqPlayer2 extends React.Component {
   }
 
   componentDidUpdate() {
-    this.playAudio()
+    // this.playAudio()
   }
 
   getTimeDomainData() {

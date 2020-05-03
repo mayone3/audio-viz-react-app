@@ -45,7 +45,7 @@ class MultiFreqPlayer extends React.Component {
   }
 
   componentDidUpdate() {
-    this.playAudio()
+    // this.playAudio()
   }
 
   getTimeDomainData() {

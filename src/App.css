@@ -1,13 +1,13 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto+Mono:300,300i,400,400i,500,500i');
 
-.app-name {
-  color: #000;
-  font-family: 'Roboto-Mono', monospace;
-}
-
 .text-data {
   color: #000;
   font-family: 'Roboto-Mono', monospace;
+  margin: auto;
+}
+
+.website-top-level {
+  text-align: center;
 }
 
 .text-btn {
@@ -21,16 +21,26 @@
   margin-bottom: 20px;
 }
 
-.app-container {
-  margin: 10px;
-}
+.app-name { max-width: 300px; }
 
-.website-header {
-  margin: 10px;
+.app-container {
+  margin: auto;
 }
 
 .app-row {
-  margin: 10px;
+  margin: auto;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.plot-col {
+  margin: 0px;
+  padding: 0px;
+}
+
+.plot-row {
+  margin: 0px;
+  padding: 0px;
 }
 
 .vslider {
