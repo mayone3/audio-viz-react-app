@@ -25,7 +25,7 @@ class App extends React.Component {
         'Microphone',
         'Audio Compressor',
       ],
-      currApp: 5,
+      currApp: 0,
       w: window.innerWidth,
       h: window.innerHeight,
     };

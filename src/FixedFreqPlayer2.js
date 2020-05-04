@@ -187,54 +187,54 @@ class FixedFreqPlayer2 extends React.Component {
     let fmax = Math.max(2125, this.state.f + 525)
 
     return (
-      <div className="app-container">
-        <div className="row text-center app-row">
+      <div className="container">
+        <div className="row app-row">
           <div className="col-md text-center">
             <div className="text-data">Amplitude<br/>{this.state.aList[this.state.aIdx]}</div>
             <button id="dec-a" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>-</button>
             <button id="inc-a" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>+</button>
           </div>
-          <div className="col-md text-center">
+          <div className="col-md">
             <div className="text-data">Frequency(Hz)<br/>{this.state.f.toFixed(2)}</div>
             <button id="dec-f" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>-</button>
             <button id="inc-f" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>+</button>
           </div>
         </div>
-        <div className="row text-center app-row">
+        <div className="row app-row">
           <div className="col-md text-center">
             <div className="text-data">Noise Amplitude<br/>{this.state.aList[this.state.noiseAIdx]}</div>
             <button id="dec-noisea" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>-</button>
             <button id="inc-noisea" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>+</button>
           </div>
-          <div className="col-md text-center">
+          <div className="col-md">
             <div className="text-data">Noise Type<br/>{this.state.noiseList[this.state.noiseType]}</div>
             <button id="prev-noise" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>←</button>
             <button id="next-noise" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>→</button>
           </div>
-          <div className="col-md text-center">
+          <div className="col-md">
             <div className="text-data">Filter Type<br/>{this.state.filterList[this.state.filterType]}</div>
             <button id="prev-filter" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>←</button>
             <button id="next-filter" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>→</button>
           </div>
-          <div className="col-md text-center">
+          <div className="col-md">
             <div className="text-data">Filter Cutoff (Hz)<br/>{this.state.filterCutoff}</div>
             <button id="dec-cutoff" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>-</button>
             <button id="inc-cutoff" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>+</button>
           </div>
-          <div className="col-md text-center">
+          <div className="col-md">
             <div className="text-data">Filter Bandwidth (Hz)<br/>{this.state.filterBandwidth}</div>
             <button id="dec-bw" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>-</button>
             <button id="inc-bw" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>+</button>
           </div>
         </div>
-        <div className="row text-center app-row">
+        <div className="row app-row">
           <div className="col-sm text-center">
             <button className="btn btn-dark" onClick={event => this.playAudio(event)}>
               <div className="text-btn">play</div>
             </button>
           </div>
         </div>
-        <div className="row text-center app-row">
+        <div className="row app-row">
           <div className="col-md text-center">
             <Plot
               data={[
@@ -246,7 +246,7 @@ class FixedFreqPlayer2 extends React.Component {
               layout={ {width: 480, height: 320, yaxis: {range: [-1.1, 1.1]}, title: 'Time Domain', margin: 0} }
             />
           </div>
-          <div className="col-md text-center">
+          <div className="col-md">
             <Plot
               data={[
                 {

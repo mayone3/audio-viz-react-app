@@ -7,9 +7,9 @@ class FMPlayer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      f: 200, // Baseband Frequency
+      f: 100, // Baseband Frequency
       fC: 1000, // Carrier Frequency
-      fDev: 150, // FM Deviation
+      fDev: 400, // FM Deviation
       bufferSize: 65536, // FFT
       sampleRate: 65536,
       numPoints: 1000,

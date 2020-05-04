@@ -191,57 +191,57 @@ class MultiFreqPlayer extends React.Component {
     var fmax = 725
 
     return (
-      <div className="app-container">
-        <div className="row text-center app-row">
-          <div className="col-sm">
+      <div className="container">
+        <div className="row" style={{marginTop: "5px", marginBottom: "20px"}}>
+          <div className="col-sm col-auto" style={{marginBottom: "20px"}}>
             <div className="text-key">C<sub>4</sub></div>
             <input id="multifreq-0" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[0]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
-          <div className="col-sm">
+          <div className="col-sm col-auto" style={{marginBottom: "20px"}}>
             <div className="text-key">C#<sub>4</sub></div>
             <input id="multifreq-1" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[1]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
-          <div className="col-sm">
+          <div className="col-sm col-auto" style={{marginBottom: "20px"}}>
             <div className="text-key">D<sub>4</sub></div>
             <input id="multifreq-2" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[2]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
-          <div className="col-sm">
+          <div className="col-sm col-auto" style={{marginBottom: "20px"}}>
             <div className="text-key">D#<sub>4</sub></div>
             <input id="multifreq-3" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[3]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
-          <div className="col-sm">
+          <div className="col-sm col-auto" style={{marginBottom: "20px"}}>
             <div className="text-key">E<sub>4</sub></div>
             <input id="multifreq-4" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[4]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
-          <div className="col-sm">
+          <div className="col-sm col-auto" style={{marginBottom: "20px"}}>
             <div className="text-key">F<sub>4</sub></div>
             <input id="multifreq-5" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[5]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
-          <div className="col-sm">
+          <div className="col-sm col-auto" style={{marginBottom: "20px"}}>
             <div className="text-key">F#<sub>4</sub></div>
             <input id="multifreq-6" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[6]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
-          <div className="col-sm">
+          <div className="col-sm col-auto" style={{marginBottom: "20px"}}>
             <div className="text-key">G<sub>4</sub></div>
             <input id="multifreq-7" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[7]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
-          <div className="col-sm">
+          <div className="col-sm col-auto" style={{marginBottom: "20px"}}>
             <div className="text-key">G#<sub>4</sub></div>
             <input id="multifreq-8" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[8]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
-          <div className="col-sm">
+          <div className="col-sm col-auto" style={{marginBottom: "20px"}}>
             <div className="text-key">A<sub>4</sub></div>
             <input id="multifreq-9" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[9]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
-          <div className="col-sm">
+          <div className="col-sm col-auto" style={{marginBottom: "20px"}}>
             <div className="text-key">A#<sub>4</sub></div>
             <input id="multifreq-10" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[10]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
-          <div className="col-sm">
+          <div className="col-sm col-auto" style={{marginBottom: "20px"}}>
             <div className="text-key">B<sub>4</sub></div>
             <input id="multifreq-11" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[11]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
-          <div className="col-sm">
+          <div className="col-sm col-auto" style={{marginBottom: "20px"}}>
             <div className="text-key">C<sub>5</sub></div>
             <input id="multifreq-12" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[12]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
