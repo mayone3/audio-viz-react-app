@@ -25,6 +25,13 @@ class AudioCompressor extends React.Component {
     this.loadCompressedSource = this.loadCompressedSource.bind(this);
     this.loadCompressedSourceCallback = this.loadCompressedSourceCallback.bind(this);
     this.tick = this.tick.bind(this);
+
+    // this.audioFile = require('marching_illini.wav')
+    // // this.audioURL = "marching_illini.wav";
+    // // read from file and create a HTML5 audio element
+    // this.audioURL = URL.createObjectURL(this.audioFile);
+    // this.audio = new Audio(this.audioURL);
+    // this.audio.addEventListener('canplaythrough', this.loadOriginalSource, true);
   }
 
   componentDidMount() {
@@ -307,7 +314,9 @@ class AudioCompressor extends React.Component {
         </div>
         <div className="row app-row">
           <div className="col-md text-center">
-            <button type="button" className="btn btn-dark text-btn" onClick={this.loadCompressedSource}>Generate Compressed Audio</button>
+            <button type="button" className="btn btn-dark" onClick={this.loadCompressedSource}>
+              <div className="text-btn">Generate Compressed Audio</div>
+            </button>
           </div>
         </div>
         <div className="row app-row">
@@ -339,13 +348,13 @@ class AudioCompressor extends React.Component {
         </div>
         <div className="row justify-content-center app-row">
           <div className="col-sm" style={{maxWidth: "200px"}}>
-            <button type="button" className="btn btn-dark text-btn" onClick={event => this.togglePlaying()}>
-              {this.state.playing ? 'Stop Playing' : 'Start Playing'}
+            <button type="button" className="btn btn-dark" onClick={event => this.togglePlaying()}>
+              <div className="text-btn">{this.state.playing ? 'Stop Playing' : 'Start Playing'}</div>
             </button>
           </div>
           <div className="col-sm" style={{maxWidth: "200px"}}>
-            <button type="button" className="btn btn-dark text-btn" onClick={event => this.toggleCompress()}>
-              {this.state.compressed ? 'Play Original' : 'Play Compressed'}
+            <button type="button" className="btn btn-dark" onClick={event => this.toggleCompress()}>
+              <div className="text-btn">{this.state.compressed ? 'Play Original' : 'Play Compressed'}</div>
             </button>
           </div>
         </div>

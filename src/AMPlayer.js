@@ -121,6 +121,7 @@ class AMPlayer extends React.Component {
     var yD = timeData.yD;
     var yC = timeData.yC;
     var n = this.state.numPoints;
+
     var fft = new DSP.FFT(this.state.bufferSize, this.state.sampleRate);
     fft.forward(timeData.y.slice(0, this.state.bufferSize));
     var fy = fft.spectrum;
@@ -208,13 +209,21 @@ class AMPlayer extends React.Component {
             <div className="row justify-content-center">
               <div className="col-sm col-auto">
                 <div className="text-data">Data<br/>Amplitude<br/>{this.state.aList[this.state.aIdx]}</div>
-                <button id="inca" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>+</button>
-                <button id="deca" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>-</button>
+                <button id="deca" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+                  <div className="text-btn">-</div>
+                </button>
+                <button id="inca" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+                  <div className="text-btn">+</div>
+                </button>
               </div>
               <div className="col-sm col-auto">
                 <div className="text-data">Data<br/>Frequency(Hz)<br/>{this.state.f}</div>
-                <button id="incf" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>+</button>
-                <button id="decf" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>-</button>
+                <button id="decf" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+                  <div className="text-btn">-</div>
+                </button>
+                <button id="incf" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+                  <div className="text-btn">+</div>
+                </button>
               </div>
             </div>
           </div>
@@ -222,13 +231,21 @@ class AMPlayer extends React.Component {
             <div className="row justify-content-center">
               <div className="col-sm col-auto">
                 <div className="text-data">Carrier<br/>Amplitude<br/>{this.state.aList[this.state.aCIdx]}</div>
-                <button id="incac" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>+</button>
-                <button id="decac" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>-</button>
+                <button id="decac" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+                  <div className="text-btn">-</div>
+                </button>
+                <button id="incac" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+                  <div className="text-btn">+</div>
+                </button>
               </div>
               <div className="col-sm col-auto">
                 <div className="text-data">Carrier<br/>Frequency(Hz)<br/>{this.state.fC}</div>
-                <button id="incfc" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>+</button>
-                <button id="decfc" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>-</button>
+                <button id="decfc" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+                  <div className="text-btn">-</div>
+                </button>
+                <button id="incfc" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+                  <div className="text-btn">+</div>
+                </button>
               </div>
             </div>
           </div>

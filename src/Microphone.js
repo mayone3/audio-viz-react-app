@@ -13,8 +13,14 @@ class Microphone extends React.Component {
       filterType: 0,
       audio: null,
       audioData: new Uint8Array(0),
-      muted: true
+      muted: true,
+      w: props.w,
+      h: props.h,
     };
+  }
+
+  componentWillReceiveProps(props) {
+    this.setState({ w: props.w, h: props.h });
   }
 
   async getMicrophone() {
@@ -51,19 +57,19 @@ class Microphone extends React.Component {
       <div className="app-container">
         <div className="row text-center app-row">
           <div className="col-md text-center">
-            <button id="mic-toggle-microphone" type="button" className="btn btn-dark text-btn" onClick={event => this.toggleMicrophone()}>
-              {this.state.audio ? 'Stop Microphone' : 'Start Microphone'}
+            <button id="mic-toggle-microphone" type="button" className="btn btn-dark" onClick={event => this.toggleMicrophone()}>
+              <div className="text-btn">{this.state.audio ? 'Stop Microphone' : 'Start Microphone'}</div>
             </button>
           </div>
         </div>
         <div className="row text-center app-row">
           <div className="col-md text-center">
-            <button id="mic-toggle-playing" type="button" className="btn btn-dark text-btn" onClick={event => this.toggleMute()}>
-              {this.state.muted ? 'Unmute' : 'Mute'}
+            <button id="mic-toggle-playing" type="button" className="btn btn-dark" onClick={event => this.toggleMute()}>
+              <div className="text-btn">{this.state.muted ? 'Unmute' : 'Mute'}</div>
             </button>
           </div>
         </div>
-        {this.state.audio ? <MicrophoneAnalyzer audio={this.state.audio} muted={this.state.muted} /> : <div></div>}
+        {this.state.audio ? <MicrophoneAnalyzer audio={this.state.audio} muted={this.state.muted} w={this.state.w} h={this.state.h} /> : <div></div>}
       </div>
     )
   }

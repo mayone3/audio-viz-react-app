@@ -6,7 +6,6 @@ import DSP from "./dsp";
 import AMPlayer from "./AMPlayer";
 import FMPlayer from "./FMPlayer";
 import FixedFreqPlayer from "./FixedFreqPlayer";
-import FixedFreqPlayer2 from "./FixedFreqPlayer2";
 import MultiFreqPlayer from "./MultiFreqPlayer";
 import Microphone from "./Microphone";
 import AudioCompressor from "./AudioCompressor";
@@ -42,23 +41,24 @@ class App extends React.Component {
 
   getCurrApp() {
     switch (this.state.currApp) {
-      case 0: return <FixedFreqPlayer2 w={this.state.w} h={this.state.h} />;
+      case 0: return <FixedFreqPlayer w={this.state.w} h={this.state.h} />;
       case 1: return <MultiFreqPlayer w={this.state.w} h={this.state.h} />;
-      case 2: return <AMPlayer w={this.state.w} h={this.state.h} />
-      case 3: return <FMPlayer w={this.state.w} h={this.state.h} />
-      case 4: return <Microphone w={this.state.w} h={this.state.h} />
-      case 5: return <AudioCompressor w={this.state.w} h={this.state.h} />
-      default: return <div>ERROR</div>
+      case 2: return <AMPlayer w={this.state.w} h={this.state.h} />;
+      case 3: return <FMPlayer w={this.state.w} h={this.state.h} />;
+      case 4: return <Microphone w={this.state.w} h={this.state.h} />;
+      case 5: return <AudioCompressor w={this.state.w} h={this.state.h} />;
+      // case 6: return <AudioCompressor2 w={this.state.w} h={this.state.h} />;
+      default: return <div>ERROR</div>;
     }
   }
 
   handleClick(event) {
-    if (event.target.id === "button-next-app" || event.target.id === "text-next-app") {
+    if (event.target.id === "button-next-app") {
       this.setState((prevState) => {
         let nextApp = (prevState.currApp + 1) % (prevState.appList.length)
         return { currApp: nextApp }
       });
-    } else if (event.target.id === "button-prev-app" || event.target.id === "text-prev-app") {
+    } else if (event.target.id === "button-prev-app") {
       this.setState((prevState) => {
         let nextApp = (prevState.currApp > 0) ? (prevState.currApp - 1) : (prevState.appList.length - 1)
         return { currApp: nextApp }
@@ -72,20 +72,20 @@ class App extends React.Component {
 
   render() {
     return (
-      <div className="website-top-level">
-        <div className="container" style={{margin: "auto"}}>
-          <div className="row justify-content-center" style={{padding: "10px 0px"}}>
-            <div className="col-xs-4 align-self-center app-button">
+      <div className="text-center">
+        <div className="container" style={{paddingTop: "20px", margin: "auto"}}>
+          <div className="row justify-content-center">
+            <div className="col-4 align-self-center app-button" style={{padding: "0px 10px"}}>
               <button id="button-prev-app" className="btn btn-dark" onClick={(event) => this.handleClick(event)}>
-                <div id="text-prev-app" className="text-btn">prev</div>
+                <div className="text-btn">prev</div>
               </button>
             </div>
-            <div className="col-xs-4 align-self-center" style={{padding: "0px 20px", width: "300px"}}>
-              <div className="text-data">{this.state.appList[this.state.currApp]}</div>
+            <div className="col-4 align-self-center">
+              <div className="text-app-name">{this.state.appList[this.state.currApp]}</div>
             </div>
-            <div className="col-xs-4 align-self-center app-button">
+            <div className="col-4 align-self-center app-button" style={{padding: "0px 10px"}}>
               <button id="button-next-app" className="btn btn-dark" onClick={(event) => this.handleClick(event)}>
-                <div id="text-next-app" className="text-btn">next</div>
+                <div className="text-btn">next</div>
               </button>
             </div>
           </div>

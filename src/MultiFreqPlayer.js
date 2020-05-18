@@ -4,8 +4,8 @@ import Plot from 'react-plotly.js'
 import * as filter from "./filter"
 
 class MultiFreqPlayer extends React.Component {
-  constructor() {
-    super()
+  constructor(props) {
+    super(props)
     this.state = {
       a: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0],
       aList: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
@@ -25,6 +25,8 @@ class MultiFreqPlayer extends React.Component {
       x: new Float64Array(65536),
       y: new Float64Array(65536),
       noise: new Float64Array(65536),
+      w: props.w,
+      h: props.h,
     }
   }
 
@@ -46,6 +48,10 @@ class MultiFreqPlayer extends React.Component {
 
   componentDidUpdate() {
     // this.playAudio()
+  }
+
+  componentWillReceiveProps(props) {
+    this.setState({ w: props.w, h: props.h });
   }
 
   getTimeDomainData() {
@@ -177,8 +183,12 @@ class MultiFreqPlayer extends React.Component {
   }
 
   render() {
-    let timeData = this.getTimeDomainData()
-    let fft = new DSP.FFT(this.state.bufferSize, this.state.sampleRate)
+    var timeData = this.getTimeDomainData();
+    var x = timeData.x;
+    var y = timeData.y;
+    var n = this.state.numPoints;
+
+    var fft = new DSP.FFT(this.state.bufferSize, this.state.sampleRate)
     fft.forward(timeData.y.slice(0, this.state.bufferSize))
     var fy = fft.spectrum
     var fx = Array(fy.length).fill(0)
@@ -189,6 +199,51 @@ class MultiFreqPlayer extends React.Component {
     }
 
     var fmax = 725
+
+    var timeDomainData = [{ x: x.slice(0, n-1), y: y.slice(0, n-1) }];
+    var freqDomainData = [{
+      x: fx.slice(0, fmax/(this.state.sampleRate/this.state.bufferSize)),
+      y: fy.slice(0, fmax/(this.state.sampleRate/this.state.bufferSize)),
+    }];
+
+    /* Layouts for plots */
+    var w, h, fontSize;
+
+    if (this.state.w >= 1200) {
+      w = 570;
+      fontSize = 10;
+    } else if (this.state.w >= 992) {
+      w = 480;
+      fontSize = 9;
+    } else if (this.state.w >= 768) {
+      w = 360;
+      fontSize = 8;
+    } else if (this.state.w >= 576) {
+      w = 540;
+      fontSize = 10;
+    } else {
+      w = this.state.w - 20;
+      fontSize = Math.min(10, this.state.w / 40);
+    }
+
+    h = w * 3 / 8 + 120;
+
+    var timeDomainLayout = {
+      width: w,
+      height: h,
+      title: 'Time Domain',
+      yaxis: {range: [-1, 1]},
+      margin: 0,
+      font: {size: fontSize},
+    };
+
+    var freqDomainLayout = {
+      width: w,
+      height: h,
+      title: 'Frequency Domain',
+      margin: 0,
+      font: {size: fontSize},
+    };
 
     return (
       <div className="container">
@@ -246,72 +301,67 @@ class MultiFreqPlayer extends React.Component {
             <input id="multifreq-12" className="custom-range no-border vslider" type="range" onChange={event => this.handleChange(event)} value={this.state.a[12]} min="0.0" max="1.0" step="0.1" orientation="vertical" />
           </div>
         </div>
-        <div className="row text-center app-row">
-        <div className="col-md text-center">
-          <div className="text-data">Noise Amplitude<br/>{this.state.aList[this.state.noiseAIdx]}</div>
-          <button id="dec-noisea" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>-</button>
-          <button id="inc-noisea" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>+</button>
+        <div className="row app-row">
+          <div className="col-sm col">
+            <div className="text-data">Noise Amplitude<br/>{this.state.aList[this.state.noiseAIdx]}</div>
+            <button id="dec-noisea" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+              <div className="text-btn">-</div>
+            </button>
+            <button id="inc-noisea" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+              <div className="text-btn">+</div>
+            </button>
+          </div>
+          <div className="col-sm col">
+            <div className="text-data">Noise Type<br/>{this.state.noiseList[this.state.noiseType]}</div>
+            <button id="prev-noise" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+              <div className="text-btn">←</div>
+            </button>
+            <button id="next-noise" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+              <div className="text-btn">→</div>
+            </button>
+          </div>
+          <div className="col-sm col">
+            <div className="text-data">Filter Type<br/>{this.state.filterList[this.state.filterType]}</div>
+            <button id="prev-filter" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+              <div className="text-btn">←</div>
+            </button>
+            <button id="next-filter" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+              <div className="text-btn">→</div>
+            </button>
+          </div>
+          <div className="col-sm col">
+            <div className="text-data">Filter Cutoff (Hz)<br/>{this.state.filterCutoff}</div>
+            <button id="dec-cutoff" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+              <div className="text-btn">-</div>
+            </button>
+            <button id="inc-cutoff" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+              <div className="text-btn">+</div>
+            </button>
+          </div>
+          <div className="col-sm col">
+            <div className="text-data">Filter Bandwidth (Hz)<br/>{this.state.filterBandwidth}</div>
+            <button id="dec-bw" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+              <div className="text-btn">-</div>
+            </button>
+            <button id="inc-bw" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+              <div className="text-btn">+</div>
+            </button>
+          </div>
         </div>
-        <div className="col-md text-center">
-          <div className="text-data">Noise Type<br/>{this.state.noiseList[this.state.noiseType]}</div>
-          <button id="prev-noise" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>←</button>
-          <button id="next-noise" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>→</button>
-        </div>
-        <div className="col-md text-center">
-          <div className="text-data">Filter Type<br/>{this.state.filterList[this.state.filterType]}</div>
-          <button id="prev-filter" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>←</button>
-          <button id="next-filter" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>→</button>
-        </div>
-        <div className="col-md text-center">
-          <div className="text-data">Filter Cutoff (Hz)<br/>{this.state.filterCutoff}</div>
-          <button id="dec-cutoff" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>-</button>
-          <button id="inc-cutoff" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>+</button>
-        </div>
-        <div className="col-md text-center">
-          <div className="text-data">Filter Bandwidth (Hz)<br/>{this.state.filterBandwidth}</div>
-          <button id="dec-bw" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>-</button>
-          <button id="inc-bw" type="button" className="btn btn-dark text-btn" onClick={event => this.handleClick(event)}>+</button>
-        </div>
-        </div>
-        <div className="row text-center app-row">
-        {
-          // empty row cuz im lazy
-        }
-        </div>
-        <div className="row text-center app-row">
-        {
-          // empty row cuz im lazy
-        }
-        </div>
-        <div className="row text-center app-row">
+
+        <div className="row app-row">
           <div className="col-sm">
             <button className="btn btn-dark" onClick={event => this.playAudio(event)}>
               <div className="text-btn">play</div>
             </button>
           </div>
         </div>
-        <div className="row text-center app-row">
-          <div className="col-md text-center">
-            <Plot
-              data={[
-                {
-                  x: timeData.x.slice(0, this.state.numPoints-1),
-                  y: timeData.y.slice(0, this.state.numPoints-1),
-                }
-              ]}
-              layout={ {width: 480, height: 320, yaxis: {range: [-1, 1]}, title: 'Time Domain', margin: 0} }
-            />
+        <div className="row">
+          <div className="col-md plot-col">
+            <Plot data={timeDomainData} layout={timeDomainLayout} config={{ responsive: 1 }} />
           </div>
-          <div className="col-md text-center">
-            <Plot
-              data={[
-                {
-                  x: fx.slice(0, fmax/(this.state.sampleRate/this.state.bufferSize)),
-                  y: fy.slice(0, fmax/(this.state.sampleRate/this.state.bufferSize))
-                }
-              ]}
-              layout={ {width: 480, height: 320, title: 'Frequency Domain', margin: 0} }
-            />
+          <div className="col-md plot-col">
+            <Plot data={freqDomainData} layout={freqDomainLayout} config={{ responsive: 1 }} />
           </div>
         </div>
       </div>

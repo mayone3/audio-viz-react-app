@@ -9,7 +9,9 @@ class MicrophoneAnalyzer extends React.Component {
     this.state = {
       timeData: new Float32Array(0),
       freqData: new Float32Array(0),
-      outputConnected: false
+      outputConnected: false,
+      w: props.w,
+      h: props.h,
     };
     this.tick = this.tick.bind(this);
     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -31,6 +33,10 @@ class MicrophoneAnalyzer extends React.Component {
     cancelAnimationFrame(this.rafId);
     this.source.disconnect();
     this.analyser.disconnect();
+  }
+
+  componentWillReceiveProps(props) {
+    this.setState({ w: props.w, h: props.h });
   }
 
   tick() {
@@ -58,20 +64,56 @@ class MicrophoneAnalyzer extends React.Component {
     var _fx = this.state.freqData.map((v, i) => i / this.analyser.frequencyBinCount * this.audioContext.sampleRate / 2);
     var _fy = this.state.freqData;
 
+    var timeDomainData = [{ x: _tx, y: _ty }];
+    var freqDomainData = [{ x: _fx, y: _fy }];
+
+    /* Layouts for plots */
+    var w, h, fontSize;
+
+    if (this.state.w >= 1200) {
+      w = 570;
+      fontSize = 10;
+    } else if (this.state.w >= 992) {
+      w = 480;
+      fontSize = 9;
+    } else if (this.state.w >= 768) {
+      w = 360;
+      fontSize = 8;
+    } else if (this.state.w >= 576) {
+      w = 540;
+      fontSize = 10;
+    } else {
+      w = this.state.w - 20;
+      fontSize = Math.min(10, this.state.w / 40);
+    }
+
+    h = w * 3 / 8 + 120;
+
+    var timeDomainLayout = {
+      width: w,
+      height: h,
+      title: 'Time Domain',
+      yaxis: {range: [-1, 1]},
+      margin: 0,
+      font: {size: fontSize},
+    };
+
+    var freqDomainLayout = {
+      width: w,
+      height: h,
+      title: 'Frequency Domain',
+      margin: 0,
+      font: {size: fontSize},
+    };
+
     return (
       <div>
-        <div className="row text-center app-row">
-          <div className="col-md text-center">
-            <Plot
-              data={[{ x: _tx, y: _ty }]}
-              layout={ {width: 480, height: 320, yaxis: {range: [-1.1, 1.1]}, title: 'Time Domain', margin: 0} }
-            />
+        <div className="row">
+          <div className="col-sm plot-col">
+            <Plot data={timeDomainData} layout={timeDomainLayout} config={{ responsive: 1 }} />
           </div>
-          <div className="col-md text-center">
-            <Plot
-              data={[{ x: _fx, y: _fy }]}
-              layout={ {width: 480, height: 320, title: 'Frequency Domain', margin: 0} }
-            />
+          <div className="col-sm plot-col">
+            <Plot data={freqDomainData} layout={freqDomainLayout} config={{ responsive: 1 }} />
           </div>
         </div>
       </div>

@@ -6,13 +6,19 @@
   margin: auto;
 }
 
-.website-top-level {
-  text-align: center;
+.text-app-name {
+  color: #000;
+  font-family: 'Roboto-Mono', monospace;
+}
+
+.param-control {
+  max-width: 160px;
 }
 
 .text-btn {
   color: #fff;
   font-family: 'Roboto-Mono', monospace;
+  pointer-events: none;
 }
 
 .text-key {

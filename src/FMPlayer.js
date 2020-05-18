@@ -197,20 +197,32 @@ class FMPlayer extends React.Component {
           <div className="col-md">
             <div className="text-data">Baseband Frequency(Hz)</div>
             <div className="text-data">{this.state.f}</div>
-            <button id="incf" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>+</button>
-            <button id="decf" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>-</button>
+            <button id="decf" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+            <div className="text-btn">-</div>
+            </button>
+            <button id="incf" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+              <div className="text-btn">+</div>
+            </button>
           </div>
           <div className="col-md text-center">
             <div className="text-data">Carrier Frequency(Hz)</div>
             <div className="text-data">{this.state.fC}</div>
-            <button id="incfc" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>+</button>
-            <button id="decfc" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>-</button>
+            <button id="decfc" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+            <div className="text-btn">-</div>
+            </button>
+            <button id="incfc" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+              <div className="text-btn">+</div>
+            </button>
           </div>
           <div className="col-md text-center">
             <div className="text-data">FM Deviation(Hz)</div>
             <div className="text-data">{this.state.fDev}</div>
-            <button id="incfdev" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>+</button>
-            <button id="decfdev" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>-</button>
+            <button id="decfdev" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+            <div className="text-btn">-</div>
+            </button>
+            <button id="incfdev" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
+              <div className="text-btn">+</div>
+            </button>
           </div>
         </div>
         <div className="row text-center app-row">
