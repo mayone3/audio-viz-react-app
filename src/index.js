@@ -27,6 +27,7 @@ class App extends React.Component {
       currApp: 0,
       w: window.innerWidth,
       h: window.innerHeight,
+      v: 30,
     };
     this.handleResize = this.handleResize.bind(this);
   }
@@ -41,12 +42,12 @@ class App extends React.Component {
 
   getCurrApp() {
     switch (this.state.currApp) {
-      case 0: return <FixedFreqPlayer w={this.state.w} h={this.state.h} />;
-      case 1: return <MultiFreqPlayer w={this.state.w} h={this.state.h} />;
-      case 2: return <AMPlayer w={this.state.w} h={this.state.h} />;
-      case 3: return <FMPlayer w={this.state.w} h={this.state.h} />;
-      case 4: return <Microphone w={this.state.w} h={this.state.h} />;
-      case 5: return <AudioCompressor w={this.state.w} h={this.state.h} />;
+      case 0: return <FixedFreqPlayer w={this.state.w} h={this.state.h} v={this.state.v} />;
+      case 1: return <MultiFreqPlayer w={this.state.w} h={this.state.h} v={this.state.v} />;
+      case 2: return <AMPlayer w={this.state.w} h={this.state.h} v={this.state.v} />;
+      case 3: return <FMPlayer w={this.state.w} h={this.state.h} v={this.state.v} />;
+      case 4: return <Microphone w={this.state.w} h={this.state.h} v={this.state.v} />;
+      case 5: return <AudioCompressor v={this.state.v} />;
       // case 6: return <AudioCompressor2 w={this.state.w} h={this.state.h} />;
       default: return <div>ERROR</div>;
     }
@@ -74,7 +75,9 @@ class App extends React.Component {
     return (
       <div className="text-center">
         <div className="container" style={{paddingTop: "20px", margin: "auto"}}>
-          <div className="row justify-content-center">
+          <div className="row app-row justify-content-center">
+          {
+            /*
             <div className="col-4 align-self-center app-button" style={{padding: "0px 10px"}}>
               <button id="button-prev-app" className="btn btn-dark" onClick={(event) => this.handleClick(event)}>
                 <div className="text-btn">prev</div>
@@ -88,8 +91,27 @@ class App extends React.Component {
                 <div className="text-btn">next</div>
               </button>
             </div>
+            */
+          }
+            <div className="col-md">
+              <select className="text-data" onChange={e => this.setState({currApp: parseInt(e.target.value)})}>
+                <option value="0">Fixed Frequency Player</option>
+                <option value="1">Multi Frequency Player</option>
+                <option value="2">AM Player</option>
+                <option value="3">FM Player</option>
+                <option value="4">Microphone</option>
+                <option value="5">Audio Compressor</option>
+              </select>
+            </div>
+          </div>
+          <div className="row app-row justify-content-center">
+            <div className="col-md">
+              <div className="text-data">Volume</div>
+              <input type="range" onChange={event => this.setState({ v: event.target.value })} value={this.state.v} min="0" max="100" step="1"/>
+            </div>
           </div>
         </div>
+
         {this.getCurrApp()}
       </div>
     )

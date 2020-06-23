@@ -20,13 +20,14 @@ class MultiFreqPlayer extends React.Component {
       filterType: 0,
       filterCutoff: 600,
       filterBandwidth: 100,
-      audioContext: new AudioContext(),
+      audioContext: new (window.AudioContext || window.webkitAudioContext)(),
       audioSource: null,
       x: new Float64Array(65536),
       y: new Float64Array(65536),
       noise: new Float64Array(65536),
       w: props.w,
       h: props.h,
+      v: props.v,
     }
   }
 
@@ -46,13 +47,15 @@ class MultiFreqPlayer extends React.Component {
     this.setState({ x: _x, y: _y, noise:_noise })
   }
 
-  componentDidUpdate() {
-    // this.playAudio()
+  componentWillReceiveProps(props) {
+    this.setState({ w: props.w, h: props.h, v: props.v });
   }
 
-  componentWillReceiveProps(props) {
-    this.setState({ w: props.w, h: props.h });
-  }
+  // componentWillUnmount() {
+  //   if (this.state.audioSource) {
+  //     this.state.audioSource.disconnect()
+  //   }
+  // }
 
   getTimeDomainData() {
     let _x = this.state.x
@@ -159,25 +162,32 @@ class MultiFreqPlayer extends React.Component {
   }
 
   stopAudio() {
+    console.log("stopAudio()")
     if (this.state.audioSource !== null) {
       this.state.audioSource.stop()
     }
   }
 
   startAudio() {
+    console.log("startAudio()")
     let arr = this.getTimeDomainData().y
     let buf = new Float32Array(arr.length)
     for (var i = 0; i < arr.length; i++) buf[i] = arr[i]
     let audioBuffer = this.state.audioContext.createBuffer(1, buf.length, this.state.sampleRate)
-    audioBuffer.copyToChannel(buf, 0)
+    audioBuffer.getChannelData(0).set(buf)
     let audioSource = this.state.audioContext.createBufferSource()
     audioSource.buffer = audioBuffer
-    audioSource.connect(this.state.audioContext.destination)
+    let gainNode = this.state.audioContext.createGain();
+    gainNode.gain.value = this.state.v / 100;
+    audioSource.connect(gainNode)
+    gainNode.connect(this.state.audioContext.destination)
     audioSource.start(0)
     this.state.audioSource = audioSource
+    console.log(audioSource)
   }
 
   playAudio() {
+    console.log("playAudio()")
     this.stopAudio();
     this.startAudio();
   }

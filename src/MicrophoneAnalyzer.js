@@ -12,21 +12,34 @@ class MicrophoneAnalyzer extends React.Component {
       outputConnected: false,
       w: props.w,
       h: props.h,
+      v: props.v,
     };
     this.tick = this.tick.bind(this);
     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    this.analyser = this.audioContext.createAnalyser();
+    this.analyser.fftSize = 8192;
+    this.analyser.smoothingTimeConstant = 0.25;
+    this.source = this.audioContext.createMediaStreamSource(this.props.audio);
+    this.source.connect(this.analyser);
+    this.gainNode = this.audioContext.createGain();
+    this.source.connect(this.gainNode);
+    this.dataArray = new Float32Array(this.analyser.frequencyBinCount);
+    this.dataArrayUint8 = new Uint8Array(this.analyser.frequencyBinCount);
+    this.freqArray = new Float32Array(this.analyser.frequencyBinCount);
+    this.rafId = requestAnimationFrame(this.tick);
   }
 
   componentDidMount() {
-    this.analyser = this.audioContext.createAnalyser();
-    this.analyser.fftSize = 16384;
-    this.analyser.smoothingTimeConstant = 0.25;
-    // this.IIRFilter = this.audioContext.createIIRFilter(feedforward, feedback);
-    this.source = this.audioContext.createMediaStreamSource(this.props.audio);
-    this.source.connect(this.analyser);
-    this.dataArray = new Float32Array(this.analyser.frequencyBinCount);
-    this.freqArray = new Float32Array(this.analyser.frequencyBinCount);
-    this.rafId = requestAnimationFrame(this.tick);
+    // this.analyser = this.audioContext.createAnalyser();
+    // // this.analyser.fftSize = 2048;
+    // this.analyser.smoothingTimeConstant = 0.25;
+    // this.source = this.audioContext.createMediaStreamSource(this.props.audio);
+    // this.source.connect(this.analyser);
+    // this.gainNode = this.audioContext.createGain();
+    // this.source.connect(this.gainNode);
+    // this.dataArray = new Float32Array(this.analyser.frequencyBinCount);
+    // this.freqArray = new Float32Array(this.analyser.frequencyBinCount);
+    // this.rafId = requestAnimationFrame(this.tick);
   }
 
   componentWillUnmount() {
@@ -36,24 +49,32 @@ class MicrophoneAnalyzer extends React.Component {
   }
 
   componentWillReceiveProps(props) {
-    this.setState({ w: props.w, h: props.h });
+    this.setState({ w: props.w, h: props.h, v: props.v });
   }
 
   tick() {
     this.rafId = requestAnimationFrame(this.tick);
 
-    this.analyser.getFloatTimeDomainData(this.dataArray);
+    // this.analyser.getFloatTimeDomainData(this.dataArray);
+    this.analyser.getByteTimeDomainData(this.dataArrayUint8);
     this.analyser.getFloatFrequencyData(this.freqArray);
+
+    for (var i = 0, imax = this.dataArray.length; i < imax; i++) {
+      this.dataArray[i] = (this.dataArrayUint8[i] - 128) * 0.0078125;
+    }
+
     this.setState({
       timeData: this.dataArray,
       freqData: this.freqArray
     });
 
     if (this.props.muted === false) {
-      this.source.connect(this.audioContext.destination);
+      this.gainNode.gain.value = this.state.v / 100;
+      this.gainNode.connect(this.audioContext.destination);
       this.setState({ outputConnected: true });
     } else if (this.state.outputConnected) {
-      this.source.disconnect(this.audioContext.destination);
+      this.gainNode.gain.value = this.state.v / 100;
+      this.gainNode.disconnect(this.audioContext.destination);
       this.setState({ outputConnected: false });
     }
   }

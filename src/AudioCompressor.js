@@ -5,8 +5,8 @@ import Plot from 'react-plotly.js';
 import * as filter from "./filter";
 
 class AudioCompressor extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       quality: 4,
       compressed: false,
@@ -18,25 +18,50 @@ class AudioCompressor extends React.Component {
       compressedSourceReady: false,
       generatingCompressedAudio: false,
       generatedCompressedAudio: false,
-      compressedLoadingProgress: ""
+      compressedLoadingProgress: "",
+      v: props.v,
     };
     this.onFileChange = this.onFileChange.bind(this);
     this.loadOriginalSource = this.loadOriginalSource.bind(this);
     this.loadCompressedSource = this.loadCompressedSource.bind(this);
     this.loadCompressedSourceCallback = this.loadCompressedSourceCallback.bind(this);
     this.tick = this.tick.bind(this);
-
-    // this.audioFile = require('marching_illini.wav')
-    // // this.audioURL = "marching_illini.wav";
-    // // read from file and create a HTML5 audio element
-    // this.audioURL = URL.createObjectURL(this.audioFile);
-    // this.audio = new Audio(this.audioURL);
-    // this.audio.addEventListener('canplaythrough', this.loadOriginalSource, true);
   }
 
   componentDidMount() {
     this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
+    this.createAudioFile();
+
     this.rafId = requestAnimationFrame(this.tick);
+  }
+
+  createAudioFile() {
+    this.audioURL = require('./marching_illini_11s.wav')
+    this.audio = new Audio(this.audioURL);
+    this.audio.addEventListener('canplaythrough', this.loadOriginalSource, true);
+
+    var request = new XMLHttpRequest();
+    request.open('GET', this.audioURL, true);
+    request.responseType = 'blob';
+    var that = this;
+    request.onload = function() {
+      that.audioFile = new File([request.response], "marching_illini.wav")
+      that.setState({ originalSourceReady: true })
+    }
+    request.send()
+  }
+
+  componentWillReceiveProps(props) {
+    this.setState({ v: props.v });
+    console.log(props.v)
+
+    if (this.compressedGainNode) {
+      this.compressedGainNode.gain.value = props.v / 100;
+    }
+
+    if (this.audio) {
+      this.audio.volume = props.v / 100;
+    }
   }
 
   componentWillUnmount() {
@@ -45,8 +70,8 @@ class AudioCompressor extends React.Component {
     if (this.state.playing) { this.stopPlaying(); }
 
     // if there are sources, disconnect them
-    if (this.source) { this.source.disconnect(); }
-    if (this.analyser) { this.analyser.disconnect(); }
+    // if (this.source) { this.source.disconnect(); }
+    // if (this.analyser) { this.analyser.disconnect(); }
     if (this.compressedSource) { this.compressedSource.disconnect(); }
     if (this.compressedGainNode) { this.compressedGainNode.disconnect(); }
 
@@ -55,7 +80,7 @@ class AudioCompressor extends React.Component {
       this.audio.removeEventListener('canplaythrough', this.loadOriginalSource, true);
       this.audio = null;
     }
-    if (this.audioStream) { this.audioStream = null; }
+    // if (this.audioStream) { this.audioStream = null; }
   }
 
   onFileChange(event) {
@@ -71,26 +96,28 @@ class AudioCompressor extends React.Component {
       // read from file and create a HTML5 audio element
       this.audioURL = URL.createObjectURL(this.audioFile);
       this.audio = new Audio(this.audioURL);
+      this.audio.volume = this.state.v / 100;
       this.audio.addEventListener('canplaythrough', this.loadOriginalSource, true);
+      this.audio.load()
     }
   }
 
   // can't create media stream source if the audio is not loaded
   loadOriginalSource() {
-    this.audioStream = this.audio.captureStream();
-    this.source = this.audioContext.createMediaStreamSource(this.audioStream);
-    this.analyser = this.audioContext.createAnalyser();
-    this.dataArray = new Float32Array(this.analyser.frequencyBinCount);
-    this.freqArray = new Float32Array(this.analyser.frequencyBinCount);
-    this.source.connect(this.analyser);
+    // this.audioStream = this.audio.captureStream();
+    // this.source = this.audioContext.createMediaStreamSource(this.audioStream);
+    // this.analyser = this.audioContext.createAnalyser();
+    // this.dataArray = new Float32Array(this.analyser.frequencyBinCount);
+    // this.freqArray = new Float32Array(this.analyser.frequencyBinCount);
+    // this.source.connect(this.analyser);
     this.audio.muted = this.state.compressed;
     this.setState({ originalSourceReady: true });
   }
 
   loadCompressedSource() {
-    if (!this.audioFile) {
+    if (!this.audio) {
       alert("Please upload an audio file!");
-    } else {
+    } else if (this.audioFile) {
       if (!this.state.generatedCompressedAudio) {
         if (!this.state.generatingCompressedAudio) {
           var fileReader = new FileReader();
@@ -102,21 +129,24 @@ class AudioCompressor extends React.Component {
       } else {
         alert("Compressed audio already generated.");
       }
+    } else {
+      alert("No audio file")
     }
   }
 
   async loadCompressedSourceCallback(event) {
     this.setState({ generatingCompressedAudio: true });
-    await new Promise(resolve => setTimeout(resolve));
+    await new Promise(resolve => setTimeout(resolve, 0));
     var arrayBuffer = event.target.result;
-    this.audioContext.decodeAudioData(arrayBuffer).then(async (audioBuffer) => {
+    console.log(arrayBuffer)
+    this.audioContext.decodeAudioData(arrayBuffer, async (audioBuffer) => {
       var audioData = audioBuffer.getChannelData(0);
       var compressedAudioData = new Float32Array(audioData.length);
       // Process audio data as chunks
       for (let i = 0; i < audioData.length / this.state.chunkSize; ++i) {
         if (i % 64 === 0) {
           this.setState({ compressedLoadingProgress: (i / (audioData.length / this.state.chunkSize) * 100).toFixed(2) + "%" });
-          await new Promise(resolve => setTimeout(resolve));
+          await new Promise(resolve => setTimeout(resolve, 0));
         }
         var start = i * this.state.chunkSize;
         var segmentSize = Math.min(audioData.length - start, this.state.chunkSize);
@@ -140,17 +170,6 @@ class AudioCompressor extends React.Component {
         var quality = this.state.quality;
         var segment = new Float32Array(segmentSize).fill(0);
 
-        // // Stupid version with brute force calculation
-        // for (let j = 0; j < quality; ++j) {
-        //   var freq = fft.getBandFrequency(fx[j]);
-        //   var phase = 0;
-        //   if (fr[fx[j]] !== 0) { phase = Math.atan(fi[fx[j]] / fr[fx[j]]); }
-        //   for (let k = 0; k < segment.length; ++k) {
-        //     segment[k] += fy[fx[j]] * Math.sin( 2 * Math.PI * ( freq * k / this.audioContext.sampleRate + phase ) );
-        //   }
-        // }
-        // compressedAudioData.set(segment, start);
-
         // Better version with Inverse Fast Fourier Transform
         var fr2 = new Float32Array(fr.length).fill(0);
         var fi2 = new Float32Array(fi.length).fill(0);
@@ -165,8 +184,11 @@ class AudioCompressor extends React.Component {
         compressedAudioData.set(segment, start);
       }
       this.compressedAudioBuffer = this.audioContext.createBuffer(1, compressedAudioData.length, this.audioContext.sampleRate);
-      this.compressedAudioBuffer.copyToChannel(compressedAudioData, 0);
+      this.compressedAudioBuffer.getChannelData(0).set(compressedAudioData);
+      // this.compressedAudioBuffer.copyToChannel(compressedAudioData, 0);
       this.setState({ compressedSourceReady: true, compressedLoadingProgress: "100%", generatingCompressedAudio: false, generatedCompressedAudio: true });
+    }, reason => {
+      console.log(reason)
     });
   }
 
@@ -191,12 +213,12 @@ class AudioCompressor extends React.Component {
     this.rafId = requestAnimationFrame(this.tick);
     // if the audio is playing, get data from audio
     if (this.state.playing) {
-      this.analyser.getFloatTimeDomainData(this.dataArray);
-      this.analyser.getFloatFrequencyData(this.freqArray);
-      this.setState({
-        timeData: this.dataArray,
-        freqData: this.freqArray,
-      });
+      // this.analyser.getFloatTimeDomainData(this.dataArray);
+      // this.analyser.getFloatFrequencyData(this.freqArray);
+      // this.setState({
+      //   timeData: this.dataArray,
+      //   freqData: this.freqArray,
+      // });
       // reset the audio if finished
       if (this.audio.currentTime === this.audio.duration) {
         this.stopPlaying();
@@ -207,27 +229,32 @@ class AudioCompressor extends React.Component {
   startPlaying() {
     if (!this.audio) {
       alert("Please upload an audio file!");
+      return;
     } else if (!this.state.originalSourceReady) {
       alert("Please wait for audio ready");
+      return;
     } else if (!this.state.compressedSourceReady && this.state.generatingCompressedAudio) {
       alert("Please wait for compressed audio finishes generating");
+      return;
     } else if (!this.state.compressedSourceReady && !this.state.generatingCompressedAudio) {
-      alert("Please generate compressed audio")
-    } else {
-      this.compressedSource = this.audioContext.createBufferSource();
-      this.compressedSource.buffer = this.compressedAudioBuffer;
-      this.compressedGainNode = this.audioContext.createGain();
-      this.compressedSource.connect(this.compressedGainNode);
-      this.compressedGainNode.connect(this.audioContext.destination);
-      if (this.state.compressed) {
-        this.compressedGainNode.gain.value = 1;
-      } else {
-        this.compressedGainNode.gain.value = 0;
-      }
-      this.compressedSource.start();
-      this.audio.play();
-      this.setState({ playing: true });
+      // alert("Please generate compressed audio")
+      this.loadCompressedSource()
+      return;
     }
+
+    this.compressedSource = this.audioContext.createBufferSource();
+    this.compressedSource.buffer = this.compressedAudioBuffer;
+    this.compressedGainNode = this.audioContext.createGain();
+    this.compressedSource.connect(this.compressedGainNode);
+    this.compressedGainNode.connect(this.audioContext.destination);
+    if (this.state.compressed) {
+      this.compressedGainNode.gain.value = this.state.v / 100;
+    } else {
+      this.compressedGainNode.gain.value = 0;
+    }
+    this.compressedSource.start();
+    this.audio.play();
+    this.setState({ playing: true });
   }
 
   stopPlaying() {
@@ -250,7 +277,7 @@ class AudioCompressor extends React.Component {
 
   startCompress() {
     // When uncompressed -> compressed, mute the HTML5 audio and unmute the gain node
-    if (this.compressedSource) { this.compressedGainNode.gain.value = 1; }
+    if (this.compressedSource) { this.compressedGainNode.gain.value = this.state.v / 100; }
     if (this.audio) { this.audio.muted = true; }
     this.setState({ compressed: true });
   }
@@ -312,13 +339,15 @@ class AudioCompressor extends React.Component {
             </select>
           </div>
         </div>
-        <div className="row app-row">
-          <div className="col-md text-center">
-            <button type="button" className="btn btn-dark" onClick={this.loadCompressedSource}>
-              <div className="text-btn">Generate Compressed Audio</div>
-            </button>
-          </div>
-        </div>
+        {
+        // <div className="row app-row">
+        //   <div className="col-md text-center">
+        //     <button type="button" className="btn btn-dark" onClick={this.loadCompressedSource}>
+        //       <div className="text-btn">Generate Compressed Audio</div>
+        //     </button>
+        //   </div>
+        // </div>
+        }
         <div className="row app-row">
           <div className="col-md text-center">
           {
@@ -349,7 +378,7 @@ class AudioCompressor extends React.Component {
         <div className="row justify-content-center app-row">
           <div className="col-sm" style={{maxWidth: "200px"}}>
             <button type="button" className="btn btn-dark" onClick={event => this.togglePlaying()}>
-              <div className="text-btn">{this.state.playing ? 'Stop Playing' : 'Start Playing'}</div>
+              <div className="text-btn">{this.state.compressedSourceReady ? (this.state.playing ? 'Stop Playing' : 'Start Playing') : "Generate Audio"}</div>
             </button>
           </div>
           <div className="col-sm" style={{maxWidth: "200px"}}>

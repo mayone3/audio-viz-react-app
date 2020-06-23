@@ -15,13 +15,14 @@ class FMPlayer extends React.Component {
       numPoints: 1000,
       w: props.w,
       h: props.h,
+      v: props.v,
     };
     this.startAudio = this.startAudio.bind(this);
     this.stopAudio = this.stopAudio.bind(this);
   }
 
   componentDidMount() {
-    this.audioContext = new AudioContext();
+    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
 
   componentWillUnmount() {
@@ -29,7 +30,7 @@ class FMPlayer extends React.Component {
   }
 
   componentWillReceiveProps(props) {
-    this.setState({ w: props.w, h: props.h });
+    this.setState({ w: props.w, h: props.h, v: props.v });
   }
 
   getTimeDomainData() {
@@ -92,10 +93,13 @@ class FMPlayer extends React.Component {
     let buf = new Float32Array(arr.length);
     for (var i = 0; i < arr.length; i++) { buf[i] = arr[i]; }
     let audioBuffer = this.audioContext.createBuffer(1, buf.length, this.state.sampleRate);
-    audioBuffer.copyToChannel(buf, 0);
+    audioBuffer.getChannelData(0).set(buf);
     this.audioSource = this.audioContext.createBufferSource();
     this.audioSource.buffer = audioBuffer;
-    this.audioSource.connect(this.audioContext.destination);
+    let gainNode = this.audioContext.createGain();
+    gainNode.gain.value = this.state.v / 100;
+    this.audioSource.connect(gainNode)
+    gainNode.connect(this.audioContext.destination)
     this.audioSource.start(0);
   }
 

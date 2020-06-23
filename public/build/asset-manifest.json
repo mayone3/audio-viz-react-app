@@ -1,0 +1,19 @@
+{
+  "files": {
+    "main.css": "/static/css/main.12a7bb6a.chunk.css",
+    "main.js": "/static/js/main.ced7b6d1.chunk.js",
+    "runtime-main.js": "/static/js/runtime-main.0861bbf0.js",
+    "static/js/2.43b37a87.chunk.js": "/static/js/2.43b37a87.chunk.js",
+    "index.html": "/index.html",
+    "precache-manifest.98bc87341761bd3af6d8f277bb989f5b.js": "/precache-manifest.98bc87341761bd3af6d8f277bb989f5b.js",
+    "service-worker.js": "/service-worker.js",
+    "static/js/2.43b37a87.chunk.js.LICENSE.txt": "/static/js/2.43b37a87.chunk.js.LICENSE.txt",
+    "static/media/marching_illini_11s.wav": "/static/media/marching_illini_11s.d0d9f8eb.wav"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.0861bbf0.js",
+    "static/js/2.43b37a87.chunk.js",
+    "static/css/main.12a7bb6a.chunk.css",
+    "static/js/main.ced7b6d1.chunk.js"
+  ]
+}

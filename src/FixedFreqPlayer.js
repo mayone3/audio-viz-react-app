@@ -21,25 +21,32 @@ class FixedFreqPlayer extends React.Component {
       filterType: 0,
       filterCutoff: 500,
       filterBandwidth: 100,
-      audioContext: new AudioContext(),
+      audioContext: new (window.AudioContext || window.webkitAudioContext)(),
       audioSource: null,
       x: new Float64Array(65536),
       y: new Float64Array(65536),
       noise: new Float64Array(65536),
       w: props.w,
       h: props.h,
+      v: props.v,
     }
   }
 
   componentDidMount() {
     var _x = this.state.x.map((v, i) => i/this.state.sampleRate)
     var _y = this.state.y.map((v, i) => this.state.aList[this.state.aIdx] * Math.sin(2 * Math.PI * this.state.f * _x[i]))
-    this.setState({ x: _x, y: _y })
+    this.setState({ x: _x, y: _y})
   }
 
   componentWillReceiveProps(props) {
-    this.setState({ w: props.w, h: props.h });
+    this.setState({ w: props.w, h: props.h, v: props.v });
   }
+
+  // componentWillUnmount() {
+  //   if (this.state.audioSource) {
+  //     this.state.audioSource.disconnect()
+  //   }
+  // }
 
   getTimeDomainData() {
     let _x = this.state.x
@@ -150,25 +157,32 @@ class FixedFreqPlayer extends React.Component {
   }
 
   stopAudio() {
+    console.log("stopAudio()")
     if (this.state.audioSource !== null) {
       this.state.audioSource.stop()
     }
   }
 
   startAudio() {
+    console.log("startAudio()")
     let arr = this.getTimeDomainData().y
     let buf = new Float32Array(arr.length)
     for (var i = 0; i < arr.length; i++) buf[i] = arr[i]
     let audioBuffer = this.state.audioContext.createBuffer(1, buf.length, this.state.sampleRate)
-    audioBuffer.copyToChannel(buf, 0)
+    audioBuffer.getChannelData(0).set(buf)
     let audioSource = this.state.audioContext.createBufferSource()
     audioSource.buffer = audioBuffer
-    audioSource.connect(this.state.audioContext.destination)
+    let gainNode = this.state.audioContext.createGain();
+    gainNode.gain.value = this.state.v / 100;
+    audioSource.connect(gainNode)
+    gainNode.connect(this.state.audioContext.destination)
     audioSource.start(0)
     this.state.audioSource = audioSource
+    console.log(audioSource)
   }
 
   playAudio() {
+    console.log("playAudio()")
     this.stopAudio();
     this.startAudio();
   }
@@ -243,6 +257,7 @@ class FixedFreqPlayer extends React.Component {
     return (
       <div className="container">
         <div className="row app-row">
+
           <div className="col-sm">
             <div className="row justify-content-center">
               <div className="col-sm-6 col">
@@ -265,6 +280,7 @@ class FixedFreqPlayer extends React.Component {
               </div>
             </div>
           </div>
+
           <div className="col-sm">
             <div className="row justify-content-center">
               <div className="col-sm-6 col">
@@ -287,11 +303,13 @@ class FixedFreqPlayer extends React.Component {
               </div>
             </div>
           </div>
+
         </div>
+
         <div className="row app-row">
+
           <div className="col-sm">
             <div className="row justify-content-center">
-
               <div className="col-sm-4 col">
                 <div className="text-data">Filter Type<br/>{this.state.filterList[this.state.filterType]}</div>
                 <button id="prev-filter" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
@@ -301,7 +319,6 @@ class FixedFreqPlayer extends React.Component {
                   <div className="text-btn">→</div>
                 </button>
               </div>
-
               <div className="col-sm-4 col">
                 <div className="text-data">Filter Cutoff (Hz)<br/>{this.state.filterCutoff}</div>
                 <button id="dec-cutoff" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
@@ -311,7 +328,6 @@ class FixedFreqPlayer extends React.Component {
                   <div className="text-btn">+</div>
                 </button>
               </div>
-
               <div className="col-sm-4 col">
                 <div className="text-data">Filter Bandwidth (Hz)<br/>{this.state.filterBandwidth}</div>
                 <button id="dec-bw" type="button" className="btn btn-dark" onClick={event => this.handleClick(event)}>
@@ -321,9 +337,9 @@ class FixedFreqPlayer extends React.Component {
                   <div className="text-btn">+</div>
                 </button>
               </div>
-
             </div>
           </div>
+
         </div>
 
         <div className="row app-row justify-content-center">
