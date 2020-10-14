@@ -27,6 +27,11 @@
   margin-bottom: 20px;
 }
 
+.text-key-eq {
+  color: #000;
+  font-family: 'Roboto-Mono', monospace;
+}
+
 .app-name { max-width: 300px; }
 
 .app-container {
@@ -52,6 +57,13 @@
 .vslider {
   width: 40px;
   height: 10px;
+  transform: rotate(270deg);
+  -moz-transform: rotate(270deg);
+}
+
+.vslider2 {
+  width: 60px;
+  height: 60px;
   transform: rotate(270deg);
   -moz-transform: rotate(270deg);
 }

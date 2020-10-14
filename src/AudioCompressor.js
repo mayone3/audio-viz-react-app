@@ -12,6 +12,7 @@ class AudioCompressor extends React.Component {
       compressed: false,
       audio: null,
       timeData: new Float32Array(0),
+      freqData: new Float32Array(0),
       playing: false,
       chunkSize: 4096,
       originalSourceReady: false,
@@ -19,6 +20,8 @@ class AudioCompressor extends React.Component {
       generatingCompressedAudio: false,
       generatedCompressedAudio: false,
       compressedLoadingProgress: "",
+      w: props.w,
+      h: props.h,
       v: props.v,
     };
     this.onFileChange = this.onFileChange.bind(this);
@@ -52,7 +55,7 @@ class AudioCompressor extends React.Component {
   }
 
   componentWillReceiveProps(props) {
-    this.setState({ v: props.v });
+    this.setState({ w: props.w, h: props.h, v: props.v });
     console.log(props.v)
 
     if (this.compressedGainNode) {
@@ -104,12 +107,14 @@ class AudioCompressor extends React.Component {
 
   // can't create media stream source if the audio is not loaded
   loadOriginalSource() {
-    // this.audioStream = this.audio.captureStream();
-    // this.source = this.audioContext.createMediaStreamSource(this.audioStream);
-    // this.analyser = this.audioContext.createAnalyser();
-    // this.dataArray = new Float32Array(this.analyser.frequencyBinCount);
-    // this.freqArray = new Float32Array(this.analyser.frequencyBinCount);
-    // this.source.connect(this.analyser);
+    this.audioStream = this.audio.captureStream();
+    this.source = this.audioContext.createMediaStreamSource(this.audioStream);
+    this.analyser = this.audioContext.createAnalyser();
+    this.analyser.smoothingTimeConstant = 0.1;
+    this.dataArray = new Float32Array(this.analyser.frequencyBinCount);
+    this.freqArray = new Float32Array(this.analyser.frequencyBinCount);
+    this.source.connect(this.analyser);
+
     this.audio.muted = this.state.compressed;
     this.setState({ originalSourceReady: true });
   }
@@ -138,7 +143,6 @@ class AudioCompressor extends React.Component {
     this.setState({ generatingCompressedAudio: true });
     await new Promise(resolve => setTimeout(resolve, 0));
     var arrayBuffer = event.target.result;
-    console.log(arrayBuffer)
     this.audioContext.decodeAudioData(arrayBuffer, async (audioBuffer) => {
       var audioData = audioBuffer.getChannelData(0);
       var compressedAudioData = new Float32Array(audioData.length);
@@ -183,6 +187,32 @@ class AudioCompressor extends React.Component {
         if (segment.length !== segmentSize) { segment = segment.slice(0, segmentSize); }
         compressedAudioData.set(segment, start);
       }
+
+      // Calculate volume then normalize
+      var rms0 = 0;
+      var rms1 = 0;
+      for (let i = 0; i < audioData.length; ++i) {
+        rms0 += audioData[i] * audioData[i];
+        rms1 += compressedAudioData[i] * compressedAudioData[i];
+      }
+
+      console.log("rms0 = ", rms0)
+      console.log("rms1 = ", rms1)
+
+      var rmsMultiplier = Math.sqrt(rms0 / rms1)
+      console.log(rmsMultiplier)
+
+      compressedAudioData = compressedAudioData.map(x => x * rmsMultiplier)
+
+      rms0 = 0;
+      rms1 = 0;
+      for (let i = 0; i < audioData.length; ++i) {
+        rms1 += compressedAudioData[i] * compressedAudioData[i];
+      }
+
+      console.log("rms2 = ", rms1)
+
+      // Make audio buffer from audio data
       this.compressedAudioBuffer = this.audioContext.createBuffer(1, compressedAudioData.length, this.audioContext.sampleRate);
       this.compressedAudioBuffer.getChannelData(0).set(compressedAudioData);
       // this.compressedAudioBuffer.copyToChannel(compressedAudioData, 0);
@@ -213,12 +243,23 @@ class AudioCompressor extends React.Component {
     this.rafId = requestAnimationFrame(this.tick);
     // if the audio is playing, get data from audio
     if (this.state.playing) {
-      // this.analyser.getFloatTimeDomainData(this.dataArray);
-      // this.analyser.getFloatFrequencyData(this.freqArray);
-      // this.setState({
-      //   timeData: this.dataArray,
-      //   freqData: this.freqArray,
-      // });
+      if (!this.state.compressed) {
+        this.analyser.getFloatTimeDomainData(this.dataArray);
+        this.analyser.getFloatFrequencyData(this.freqArray);
+        this.setState({
+          timeData: this.dataArray,
+          freqData: this.freqArray,
+        });
+      } else {
+        this.compressedAnalyser.getFloatTimeDomainData(this.dataArray);
+        this.compressedAnalyser.getFloatFrequencyData(this.freqArray);
+        this.setState({
+          timeData: this.dataArray,
+          freqData: this.freqArray,
+        });
+      }
+      // console.log(this.state.timeData)
+      console.log(this.state.freqData)
       // reset the audio if finished
       if (this.audio.currentTime === this.audio.duration) {
         this.stopPlaying();
@@ -245,14 +286,18 @@ class AudioCompressor extends React.Component {
     this.compressedSource = this.audioContext.createBufferSource();
     this.compressedSource.buffer = this.compressedAudioBuffer;
     this.compressedGainNode = this.audioContext.createGain();
+    this.compressedAnalyser = this.audioContext.createAnalyser();
+    this.compressedAnalyser.smoothingTimeConstant = 0.1;
     this.compressedSource.connect(this.compressedGainNode);
     this.compressedGainNode.connect(this.audioContext.destination);
+    this.compressedSource.connect(this.compressedAnalyser);
     if (this.state.compressed) {
       this.compressedGainNode.gain.value = this.state.v / 100;
     } else {
       this.compressedGainNode.gain.value = 0;
     }
     this.compressedSource.start();
+    this.audio.volume = this.state.v / 100;
     this.audio.play();
     this.setState({ playing: true });
   }
@@ -298,6 +343,53 @@ class AudioCompressor extends React.Component {
   }
 
   render() {
+    var _tx = this.state.timeData.map((v, i) => i / this.audioContext.sampleRate);
+    var _ty = this.state.timeData;
+    var _fx = this.state.freqData.map((v, i) => i / this.analyser.frequencyBinCount * this.audioContext.sampleRate / 2);
+    var _fy = this.state.freqData;
+
+    var timeDomainData = [{ x: _tx, y: _ty }];
+    var freqDomainData = [{ x: _fx, y: _fy }];
+
+    /* Layouts for plots */
+    var w, h, fontSize;
+
+    if (this.state.w >= 1200) {
+      w = 570;
+      fontSize = 10;
+    } else if (this.state.w >= 992) {
+      w = 480;
+      fontSize = 9;
+    } else if (this.state.w >= 768) {
+      w = 360;
+      fontSize = 8;
+    } else if (this.state.w >= 576) {
+      w = 540;
+      fontSize = 10;
+    } else {
+      w = this.state.w - 20;
+      fontSize = Math.min(10, this.state.w / 40);
+    }
+
+    h = w * 3 / 8 + 120;
+
+    var timeDomainLayout = {
+      width: w,
+      height: h,
+      title: 'Time Domain',
+      yaxis: {range: [-1, 1]},
+      margin: 0,
+      font: {size: fontSize},
+    };
+
+    var freqDomainLayout = {
+      width: w,
+      height: h,
+      title: 'Frequency Domain',
+      margin: 0,
+      font: {size: fontSize},
+    };
+
     return (
       <div className="container" style={{margin: "auto"}}>
         <div className="row justify-content-center app-row">
@@ -385,6 +477,15 @@ class AudioCompressor extends React.Component {
             <button type="button" className="btn btn-dark" onClick={event => this.toggleCompress()}>
               <div className="text-btn">{this.state.compressed ? 'Play Original' : 'Play Compressed'}</div>
             </button>
+          </div>
+        </div>
+
+        <div className="row">
+          <div className="col-sm plot-col">
+            <Plot data={timeDomainData} layout={timeDomainLayout} config={{ responsive: 1 }} />
+          </div>
+          <div className="col-sm plot-col">
+            <Plot data={freqDomainData} layout={freqDomainLayout} config={{ responsive: 1 }} />
           </div>
         </div>
       </div>

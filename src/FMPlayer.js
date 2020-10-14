@@ -52,10 +52,9 @@ class FMPlayer extends React.Component {
       _yC[i] = Math.sin(2 * Math.PI * fC * _x[i]);
     }
 
-    // return np.cos( 2*np.pi * f_c * ts + (f_dev / f_m) * np.sin( 2*np.pi * f_m * ts ) ).astype(np.float32)
-    // y(t) = cos( 2*pi * f_c * t + ( f_dev / f_m ) * sin( 2*pi * f_m * t ) )
+    // https://en.wikipedia.org/wiki/Frequency_modulation
     for (let i = 0; i < this.state.sampleRate; ++i) {
-      _y[i] = Math.cos(2 * Math.PI * fC * _x[i] + (fDev / f) * Math.sin(2 * Math.PI * f * _x[i]));
+      _y[i] = Math.sin(2 * Math.PI * fC * _x[i] - (fDev / f) * Math.cos(2 * Math.PI * f * _x[i]) + (fDev / f));
     }
 
     return ({
@@ -106,6 +105,14 @@ class FMPlayer extends React.Component {
   playAudio() {
     this.stopAudio();
     this.startAudio();
+  }
+
+  resetDefault() {
+    this.setState({
+      f: 100,
+      fC: 1000,
+      fDev: 400,
+    })
   }
 
   render() {
@@ -233,6 +240,13 @@ class FMPlayer extends React.Component {
           <div className="col-sm text-center">
             <button className="btn btn-dark" onClick={event => this.playAudio(event)}>
               <div className="text-btn">play audio</div>
+            </button>
+          </div>
+        </div>
+        <div className="row text-center app-row">
+          <div className="col-sm text-center">
+            <button className="btn btn-dark" onClick={event => this.resetDefault(event)}>
+              <div className="text-btn">reset</div>
             </button>
           </div>
         </div>

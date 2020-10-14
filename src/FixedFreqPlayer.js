@@ -11,9 +11,9 @@ class FixedFreqPlayer extends React.Component {
       aIdx: 10,
       fIdx: 49,
       f: 440,
-      bufferSize: 65536, // FFT
-      sampleRate: 65536,
-      numPoints: 1000,
+      bufferSize: 262144, // FFT
+      sampleRate: 16384,
+      numPoints: 100,
       noiseAIdx: 10,
       noiseList: ['NONE', 'WHITE', 'PINK'],
       noiseType: 0,
@@ -23,9 +23,10 @@ class FixedFreqPlayer extends React.Component {
       filterBandwidth: 100,
       audioContext: new (window.AudioContext || window.webkitAudioContext)(),
       audioSource: null,
-      x: new Float64Array(65536),
-      y: new Float64Array(65536),
-      noise: new Float64Array(65536),
+      x: new Float64Array(262144),
+      y: new Float64Array(262144),
+      noise: new Float64Array(262144),
+      t: 16,
       w: props.w,
       h: props.h,
       v: props.v,
@@ -41,12 +42,6 @@ class FixedFreqPlayer extends React.Component {
   componentWillReceiveProps(props) {
     this.setState({ w: props.w, h: props.h, v: props.v });
   }
-
-  // componentWillUnmount() {
-  //   if (this.state.audioSource) {
-  //     this.state.audioSource.disconnect()
-  //   }
-  // }
 
   getTimeDomainData() {
     let _x = this.state.x
@@ -115,14 +110,12 @@ class FixedFreqPlayer extends React.Component {
         let _noise2 = filter.IIRFilter(1, _noise, this.state.sampleRate, 399, 0)
         let _noise3 = filter.IIRFilter(1, _noise, this.state.sampleRate, 3990, 0)
         _noise = _noise.map((v, i) => _noise1[i]+0.7*_noise2[i]+0.4*_noise3[i])
-        let r = Math.max(..._noise)
-        _noise = _noise.map(x => x/r)
       }
     }
 
     if (_noiseType !== 0) {
-      let r = Math.max(..._noise)
-      _noise = _noise.map(x => x/r*this.state.aList[_noiseAIdx])
+      // let r = Math.max(..._noise)
+      // _noise = _noise.map(x => x/r*this.state.aList[_noiseAIdx])
     }
 
     this.setState({ noiseAIdx: _noiseAIdx, noiseType: _noiseType, noise:_noise })
@@ -166,7 +159,8 @@ class FixedFreqPlayer extends React.Component {
   startAudio() {
     console.log("startAudio()")
     let arr = this.getTimeDomainData().y
-    let buf = new Float32Array(arr.length)
+    let buf = new Float32Array(arr.length*16)
+    // for (var i = 0; i < arr.length*16; i++) buf[i] = arr[i%arr.length]
     for (var i = 0; i < arr.length; i++) buf[i] = arr[i]
     let audioBuffer = this.state.audioContext.createBuffer(1, buf.length, this.state.sampleRate)
     audioBuffer.getChannelData(0).set(buf)
@@ -187,6 +181,33 @@ class FixedFreqPlayer extends React.Component {
     this.startAudio();
   }
 
+  resetSignal() {
+    console.log("resetSignal()")
+    let _y = new Float64Array(this.state.bufferSize)
+    _y = _y.map((v, i) => this.state.aList[10] * Math.sin(2 * Math.PI * 440 * this.state.x[i]))
+    this.setState({ aIdx: 10, fIdx: 49, f: 440, y: _y })
+  }
+
+  resetNoise() {
+    console.log("resetNoise()")
+    var _noise = this.state.noise
+    _noise = _noise.map(x => 0)
+    this.setState({ noiseAIdx: 10, noiseType: 0, noise:_noise })
+  }
+
+  resetFilter() {
+    console.log("resetFilter()")
+    this.setState({ filterType: 0, filterCutoff: 500, filterBandwidth: 100})
+  }
+
+  resetDefault() {
+    console.log("resetDefault()");
+    this.stopAudio()
+    this.resetSignal()
+    this.resetNoise()
+    this.resetFilter()
+  }
+
   render() {
     var timeData = this.getTimeDomainData()
     var x = timeData.x;
@@ -201,7 +222,7 @@ class FixedFreqPlayer extends React.Component {
     for (let i = 0; i < fx.length; ++i) {
       fx[i] = this.state.sampleRate / this.state.bufferSize * i
       // fy[i] = fy[i] * -1 * Math.log((fft.bufferSize/2 - i) * (0.5/fft.bufferSize/2)) * fft.bufferSize
-      // fy[i] = Math.log(fy[i])
+      fy[i] = Math.log(fy[i])
     }
 
     var fmax = Math.max(2125, this.state.f + 525)
@@ -250,9 +271,6 @@ class FixedFreqPlayer extends React.Component {
       margin: 0,
       font: {size: fontSize},
     };
-
-    console.log('window resized to: ', this.state.w, 'x', this.state.h);
-    console.log('plot resized to: ', w, 'x', h);
 
     return (
       <div className="container">
@@ -342,10 +360,20 @@ class FixedFreqPlayer extends React.Component {
 
         </div>
 
-        <div className="row app-row justify-content-center">
+        <div className="row app-row justify-content-center" style={{maxWidth: "300px"}}>
           <div className="col-sm col-auto">
             <button className="btn btn-dark" onClick={event => this.playAudio(event)}>
               <div className="text-btn">play</div>
+            </button>
+          </div>
+          <div className="col-sm col-auto">
+            <button className="btn btn-dark" onClick={event => this.stopAudio(event)}>
+              <div className="text-btn">stop</div>
+            </button>
+          </div>
+          <div className="col-sm col-auto">
+            <button className="btn btn-dark" onClick={event => this.resetDefault(event)}>
+              <div className="text-btn">reset</div>
             </button>
           </div>
         </div>

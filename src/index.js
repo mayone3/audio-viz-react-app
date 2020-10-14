@@ -9,6 +9,7 @@ import FixedFreqPlayer from "./FixedFreqPlayer";
 import MultiFreqPlayer from "./MultiFreqPlayer";
 import Microphone from "./Microphone";
 import AudioCompressor from "./AudioCompressor";
+import Equalizer from "./Equalizer"
 
 import './App.css';
 
@@ -23,6 +24,7 @@ class App extends React.Component {
         'FM Player',
         'Microphone',
         'Audio Compressor',
+        'Equalizer',
       ],
       currApp: 0,
       w: window.innerWidth,
@@ -47,8 +49,8 @@ class App extends React.Component {
       case 2: return <AMPlayer w={this.state.w} h={this.state.h} v={this.state.v} />;
       case 3: return <FMPlayer w={this.state.w} h={this.state.h} v={this.state.v} />;
       case 4: return <Microphone w={this.state.w} h={this.state.h} v={this.state.v} />;
-      case 5: return <AudioCompressor v={this.state.v} />;
-      // case 6: return <AudioCompressor2 w={this.state.w} h={this.state.h} />;
+      case 5: return <AudioCompressor w={this.state.w} h={this.state.h} v={this.state.v} />;
+      case 6: return <Equalizer w={this.state.w} h={this.state.h} v={this.state.v} />;
       default: return <div>ERROR</div>;
     }
   }
@@ -101,6 +103,7 @@ class App extends React.Component {
                 <option value="3">FM Player</option>
                 <option value="4">Microphone</option>
                 <option value="5">Audio Compressor</option>
+                <option value="6">Equalizer</option>
               </select>
             </div>
           </div>

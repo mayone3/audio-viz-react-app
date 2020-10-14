@@ -51,12 +51,6 @@ class MultiFreqPlayer extends React.Component {
     this.setState({ w: props.w, h: props.h, v: props.v });
   }
 
-  // componentWillUnmount() {
-  //   if (this.state.audioSource) {
-  //     this.state.audioSource.disconnect()
-  //   }
-  // }
-
   getTimeDomainData() {
     let _x = this.state.x
     let _y = this.state.y
@@ -192,6 +186,40 @@ class MultiFreqPlayer extends React.Component {
     this.startAudio();
   }
 
+  resetSignal() {
+    var _y = new Float64Array(this.state.bufferSize).fill(0)
+    var _a = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+    for (let i = 0; i < _y.length; ++i) {
+      for (let freqIndex = 0; freqIndex < this.state.f.length; ++freqIndex) {
+        _y[i] += _a[freqIndex] * Math.sin(2 * Math.PI * this.state.f[freqIndex] * this.state.x[i])
+      }
+    }
+    var r = 0
+    for (let i = 0; i < _a.length; ++i) { r += 1 * (_a[i] !== 0) }
+    for (let i = 0; i < _y.length; ++i) { _y[i] /= r }
+    this.setState({ a: _a, y: _y })
+  }
+
+  resetNoise() {
+    console.log("resetNoise()")
+    var _noise = this.state.noise
+    _noise = _noise.map(x => 0)
+    this.setState({ noiseAIdx: 10, noiseType: 0, noise:_noise })
+  }
+
+  resetFilter() {
+    console.log("resetFilter()")
+    this.setState({ filterType: 0, filterCutoff: 600, filterBandwidth: 100})
+  }
+
+  resetDefault() {
+    console.log("resetDefault()")
+    this.resetSignal()
+    this.resetNoise()
+    this.resetFilter()
+  }
+
   render() {
     var timeData = this.getTimeDomainData();
     var x = timeData.x;
@@ -206,6 +234,7 @@ class MultiFreqPlayer extends React.Component {
     for (let i = 0; i < fx.length; ++i) {
       fx[i] = this.state.sampleRate / this.state.bufferSize * i
       // fy[i] = fy[i] * -1 * Math.log((fft.bufferSize/2 - i) * (0.5/fft.bufferSize/2)) * fft.bufferSize
+      fy[i] = Math.log(fy[i])
     }
 
     var fmax = 725
@@ -366,6 +395,15 @@ class MultiFreqPlayer extends React.Component {
             </button>
           </div>
         </div>
+
+        <div className="row app-row justify-content-center">
+          <div className="col-sm col-auto">
+            <button className="btn btn-dark" onClick={event => this.resetDefault(event)}>
+              <div className="text-btn">reset</div>
+            </button>
+          </div>
+        </div>
+
         <div className="row">
           <div className="col-md plot-col">
             <Plot data={timeDomainData} layout={timeDomainLayout} config={{ responsive: 1 }} />

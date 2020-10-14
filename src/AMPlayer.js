@@ -118,6 +118,15 @@ class AMPlayer extends React.Component {
     this.startAudio();
   }
 
+  resetDefault() {
+    this.setState({
+      aIdx: 10,
+      aCIdx: 10,
+      f: 100,
+      fC: 1000,
+    })
+  }
+
   render() {
     var timeData = this.getTimeDomainData();
     var x = timeData.x;
@@ -258,6 +267,13 @@ class AMPlayer extends React.Component {
           <div className="col-sm">
             <button className="btn btn-dark" onClick={event => this.playAudio(event)}>
               <div className="text-btn">play audio</div>
+            </button>
+          </div>
+        </div>
+        <div className="row app-row">
+          <div className="col-sm">
+            <button className="btn btn-dark" onClick={event => this.resetDefault(event)}>
+              <div className="text-btn">reset</div>
             </button>
           </div>
         </div>
